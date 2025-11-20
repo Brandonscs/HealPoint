@@ -74,12 +74,15 @@ public class UsuarioController {
         if (datos.getCorreo() == null || datos.getCorreo().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("El correo es obligatorio.");
         }
-        if (usuarioRepository.findByCorreo(datos.getCorreo()) != null) {
+
+        if (usuarioRepository.findByCorreo(datos.getCorreo()).isPresent()) {
             return ResponseEntity.badRequest().body("Ya existe un usuario con ese correo.");
         }
+
         if (datos.getRol() == null || datos.getRol().getIdRol() == null) {
             return ResponseEntity.badRequest().body("Debe indicar un rol válido.");
         }
+
         if (datos.getEstado() == null || datos.getEstado().getIdEstado() == null) {
             return ResponseEntity.badRequest().body("Debe indicar un estado válido.");
         }
@@ -135,6 +138,12 @@ public class UsuarioController {
         if (datos.getCorreo() == null || datos.getCorreo().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("El correo no puede estar vacío.");
         }
+
+        usuarioRepository.findByCorreo(datos.getCorreo()).ifPresent(existing -> {
+            if (!existing.getIdUsuario().equals(datos.getIdUsuario())) {
+                throw new RuntimeException("Ya existe otro usuario con ese correo.");
+            }
+        });
 
         usuario.setNombre(datos.getNombre());
         usuario.setApellido(datos.getApellido());

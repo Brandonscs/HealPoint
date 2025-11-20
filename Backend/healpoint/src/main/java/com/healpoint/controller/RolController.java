@@ -62,7 +62,7 @@ public class RolController {
             return ResponseEntity.badRequest().body("Debe ingresar un nombre.");
         }
 
-        Rol rol = rolRepository.findByNombreRol(nombre);
+        Rol rol = rolRepository.findByNombreRol(nombre).orElse(null);
 
         if (rol == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -90,7 +90,7 @@ public class RolController {
             return ResponseEntity.badRequest().body("El estado enviado no existe.");
         }
 
-        if (rolRepository.findByNombreRol(datos.getNombreRol()) != null) {
+        if (rolRepository.findByNombreRol(datos.getNombreRol()).isPresent()) {
             return ResponseEntity.badRequest().body("Ya existe un rol con ese nombre.");
         }
 
@@ -110,6 +110,7 @@ public class RolController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Rol creado exitosamente.");
     }
+
 
     @PutMapping("/actualizarRol")
     public ResponseEntity<?> actualizarRol(@RequestBody Rol datos,
