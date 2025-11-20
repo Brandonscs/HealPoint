@@ -9,6 +9,7 @@ import com.healpoint.repository.MedicoRepository;
 import com.healpoint.repository.PacienteRepository;
 import com.healpoint.repository.EstadoRepository;
 
+import com.healpoint.service.MonitoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,8 @@ public class CitaController {
     @Autowired
     private EstadoRepository estadoRepository;
 
+    @Autowired
+    private MonitoriaService monitoriaService;
 
     /**
      * GET /cita/mostrarCitas → Listar todas las citas.
@@ -136,6 +139,14 @@ public class CitaController {
 
         Cita citaGuardada = citaRepository.save(nuevaCita);
 
+        // Monitoreo
+        monitoriaService.registrarAccion(
+                "cita",
+                "CREATE",
+                citaData.getPaciente().getIdPaciente(), // o el id del usuario que realiza la acción
+                "Se creó la cita ID " + citaGuardada.getId_cita()
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).body(citaGuardada);
     }
 
@@ -188,6 +199,15 @@ public class CitaController {
 
         // 4. Guardar y retornar
         Cita citaActualizada = citaRepository.save(citaExistente);
+
+        // Monitoreo
+        monitoriaService.registrarAccion(
+                "cita",
+                "UPDATE",
+                citaExistente.getPaciente().getIdPaciente(), // o id del usuario que realiza la acción
+                "Se actualizó la cita ID " + citaActualizada.getId_cita()
+        );
+
         return ResponseEntity.ok(citaActualizada);
     }
 
@@ -225,6 +245,14 @@ public class CitaController {
         // 3. Cambiar el estado a "Cancelada"
         cita.setEstado(estadoCanceladaOpt.get());
         citaRepository.save(cita);
+
+        // Monitoreo
+        monitoriaService.registrarAccion(
+                "cita",
+                "DELETE",
+                cita.getPaciente().getIdPaciente(), // o id del usuario que realiza la acción
+                "Se canceló/eliminó la cita ID " + cita.getId_cita()
+        );
 
         return ResponseEntity.ok("Cita con ID " + idCita + " cancelada exitosamente.");
     }

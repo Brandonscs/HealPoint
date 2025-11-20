@@ -12,6 +12,7 @@ public class Estado {
     @Column(name = "nombre_estado", nullable = false, unique = true, length = 100)
     private String nombreEstado;
 
+    @Column(name = "descripcion")
     private String descripcion;
 
     public Estado() {}

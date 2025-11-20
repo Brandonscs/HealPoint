@@ -7,31 +7,31 @@ import jakarta.persistence.*;
 public class Paciente {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_paciente")
     private Integer idPaciente;
 
     @Column(nullable = false)
     private String eps;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id_paciente")
+    @ManyToOne
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    public Paciente() {
-    }
+    @ManyToOne
+    @JoinColumn(name = "id_estado", nullable = false)
+    private Estado estado;
 
-    public Paciente(String eps, Usuario usuario) {
+    public Paciente() {}
+
+    public Paciente(String eps, Usuario usuario, Estado estado) {
         this.eps = eps;
         this.usuario = usuario;
+        this.estado = estado;
     }
 
     public Integer getIdPaciente() {
         return idPaciente;
-    }
-
-    public void setIdPaciente(Integer idPaciente) {
-        this.idPaciente = idPaciente;
     }
 
     public String getEps() {
@@ -48,6 +48,13 @@ public class Paciente {
 
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
-        this.idPaciente = usuario.getIdUsuario();
+    }
+
+    public Estado getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Estado estado) {
+        this.estado = estado;
     }
 }

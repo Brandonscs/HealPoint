@@ -13,9 +13,12 @@ public class Medico {
     @Column(nullable = false)
     private String especialidad;
 
+    @ManyToOne
+    @JoinColumn(name = "id_estado", nullable = false)
+    private Estado estado;
 
     @OneToOne
-    @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario")
+    @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario", nullable = false)
     private Usuario usuario;
 
     public Integer getId_medico() {
@@ -32,6 +35,14 @@ public class Medico {
 
     public void setEspecialidad(String especialidad) {
         this.especialidad = especialidad;
+    }
+
+    public Estado getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Estado estado) {
+        this.estado = estado;
     }
 
     public Usuario getUsuario() {

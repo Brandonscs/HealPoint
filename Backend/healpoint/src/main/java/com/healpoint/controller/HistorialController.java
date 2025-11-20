@@ -5,6 +5,7 @@ import com.healpoint.entity.HistorialMedico;
 import com.healpoint.repository.HistorialRepository;
 import com.healpoint.repository.CitaRepository;
 
+import com.healpoint.service.MonitoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,9 @@ public class HistorialController {
 
     @Autowired
     private CitaRepository citaRepository;
+
+    @Autowired
+    private MonitoriaService monitoriaService;
 
     /**
      * GET /historial/mostrarHistoriales → Listar todos los historiales médicos.
@@ -56,9 +60,8 @@ public class HistorialController {
      * POST /historial/crearHistorial → Registrar nuevo historial médico.
      */
     @PostMapping("/crearHistorial")
-    public ResponseEntity<?> postHistorial(@RequestBody HistorialMedico historialData) {
+    public ResponseEntity<?> postHistorial(@RequestParam Integer idUsuarioEditor, @RequestBody HistorialMedico historialData) {
 
-        // 1. Validar que se haya enviado el ID de la cita
         if (historialData.getCita() == null || historialData.getCita().getId_cita() == null) {
             return ResponseEntity.badRequest().body("El ID de la cita es obligatorio para registrar el historial.");
         }
@@ -66,29 +69,31 @@ public class HistorialController {
         Integer idCita = historialData.getCita().getId_cita();
         Optional<Cita> citaOpt = citaRepository.findById(idCita);
 
-        // 2. Validar que la cita exista
         if (!citaOpt.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No se puede registrar historial, la cita ID " + idCita + " no existe.");
         }
 
-        // 3. Validar que la cita NO tenga un historial ya registrado (OneToOne)
         if (historialRepository.findByCita(citaOpt.get()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Ya existe un historial médico registrado para la cita ID " + idCita + ".");
         }
 
-        // 4. Crear el historial
         HistorialMedico nuevoHistorial = new HistorialMedico();
-        nuevoHistorial.setCita(citaOpt.get()); // Asignamos el objeto Cita completo
+        nuevoHistorial.setCita(citaOpt.get());
         nuevoHistorial.setObservaciones(historialData.getObservaciones());
         nuevoHistorial.setDiagnostico(historialData.getDiagnostico());
         nuevoHistorial.setTratamiento(historialData.getTratamiento());
-        // fechaRegistro se establece automáticamente en la entidad
 
         HistorialMedico historialGuardado = historialRepository.save(nuevoHistorial);
 
-        // Opcionalmente, aquí se podría cambiar el estado de la Cita a "Realizada"
+        // Monitoreo
+        monitoriaService.registrarAccion(
+                "historial_medico",
+                "CREATE",
+                idUsuarioEditor,
+                "Se creó el historial médico ID " + historialGuardado.getId_historial()
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(historialGuardado);
     }
@@ -97,9 +102,9 @@ public class HistorialController {
      * PUT /historial/actualizarHistorial?idHistorial=... → Actualizar observaciones o diagnóstico.
      */
     @PutMapping("/actualizarHistorial")
-    public ResponseEntity<?> putHistorial(@RequestParam Integer idHistorial, @RequestBody HistorialMedico datosActualizados) {
+    public ResponseEntity<?> putHistorial(@RequestParam Integer idHistorial, @RequestParam Integer idUsuarioEditor,
+                                          @RequestBody HistorialMedico datosActualizados) {
 
-        // 1. Validar existencia del historial
         Optional<HistorialMedico> historialOpt = historialRepository.findById(idHistorial);
 
         if (!historialOpt.isPresent()) {
@@ -109,7 +114,6 @@ public class HistorialController {
 
         HistorialMedico historialExistente = historialOpt.get();
 
-        // 2. Actualizar campos (permitiendo que sean nulos si no se envían)
         if (datosActualizados.getObservaciones() != null) {
             historialExistente.setObservaciones(datosActualizados.getObservaciones());
         }
@@ -119,10 +123,17 @@ public class HistorialController {
         if (datosActualizados.getTratamiento() != null) {
             historialExistente.setTratamiento(datosActualizados.getTratamiento());
         }
-        // No se permite cambiar la cita ni la fecha de registro original directamente.
 
-        // 3. Guardar y retornar
         HistorialMedico historialActualizado = historialRepository.save(historialExistente);
+
+        // Monitoreo
+        monitoriaService.registrarAccion(
+                "historial_medico",
+                "UPDATE",
+                idUsuarioEditor,
+                "Se actualizó el historial médico ID " + historialActualizado.getId_historial()
+        );
+
         return ResponseEntity.ok(historialActualizado);
     }
 
@@ -130,20 +141,26 @@ public class HistorialController {
      * DELETE /historial/eliminarHistorial?idHistorial=... → Eliminar historial.
      */
     @DeleteMapping("/eliminarHistorial")
-    public ResponseEntity<?> deleteHistorial(@RequestParam Integer idHistorial) {
+    public ResponseEntity<?> deleteHistorial(@RequestParam Integer idHistorial, @RequestParam Integer idUsuarioEditor) {
 
-        // 1. Validar existencia
         if (!historialRepository.existsById(idHistorial)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Historial con ID " + idHistorial + " no encontrado para eliminar.");
         }
 
         try {
-            // 2. Eliminar el historial
             historialRepository.deleteById(idHistorial);
+
+            // Monitoreo
+            monitoriaService.registrarAccion(
+                    "historial_medico",
+                    "DELETE",
+                    idUsuarioEditor,
+                    "Se eliminó el historial médico ID " + idHistorial
+            );
+
             return ResponseEntity.ok("Historial médico con ID " + idHistorial + " eliminado correctamente.");
         } catch (Exception e) {
-            // Manejo de error si hay alguna restricción de base de datos
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("No se pudo eliminar el historial ID " + idHistorial + " debido a un error interno.");
         }
