@@ -250,4 +250,36 @@ public class UsuarioController {
 
         return ResponseEntity.ok("Usuario activado correctamente.");
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Usuario datos) {
+
+        if (datos.getCorreo() == null || datos.getContrasena() == null) {
+            return ResponseEntity.badRequest().body("Correo y contraseña requeridos.");
+        }
+
+        Usuario usuario = usuarioRepository.findByCorreo(datos.getCorreo())
+                .orElse(null);
+
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("El correo no está registrado.");
+        }
+
+        // Validar contraseña
+        if (!usuario.getContrasena().equals(datos.getContrasena())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Contraseña incorrecta.");
+        }
+
+        if (usuario.getEstado().getIdEstado() != 1) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("El usuario está inactivo.");
+        }
+
+        // Evitar enviar contraseña al frontend
+        usuario.setContrasena(null);
+
+        return ResponseEntity.ok(usuario);
+    }
 }
