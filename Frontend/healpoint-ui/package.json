@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "sass": "^1.94.0"
+    "react-router-dom": "^7.9.6",
+    "sass": "^1.94.0",
+    "sweetalert2": "^11.26.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
