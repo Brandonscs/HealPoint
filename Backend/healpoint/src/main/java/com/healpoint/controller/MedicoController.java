@@ -3,6 +3,8 @@ package com.healpoint.controller;
 import com.healpoint.entity.Medico;
 import com.healpoint.repository.MedicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +29,21 @@ public class MedicoController {
         return medicoRepository.findById(id);
     }
 
+<<<<<<< Updated upstream
     // POST /medico/crearMedico
+=======
+
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<Medico> obtenerMedicoPorIdUsuario(@PathVariable Integer idUsuario) {
+        return medicoRepository.findByUsuario_IdUsuario(idUsuario)
+                .map(medico -> ResponseEntity.ok(medico))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+
+
+
+>>>>>>> Stashed changes
     @PostMapping("/crearMedico")
     public Medico postMedico(@RequestBody Medico medico) {
         return medicoRepository.save(medico);
