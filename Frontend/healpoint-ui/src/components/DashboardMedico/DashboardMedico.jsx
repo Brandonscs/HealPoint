@@ -2,13 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./DashboardMedico.scss";
-<<<<<<< Updated upstream
 import Navbar from "../Navbar/Navbar";
 import Sidebar from "../Sidebar/Sidebar";
-=======
-import Navbar from "../Shared/Navbar/Navbar";
-import Sidebar from "../Shared/Sidebar/Sidebar";
->>>>>>> Stashed changes
 
 export default function DashboardMedico() {
   const navigate = useNavigate();
@@ -126,11 +121,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/medico/disponibilidad")}
             >
-<<<<<<< Updated upstream
               <img src="/icons/calendar-clock.svg" alt="Disponibilidad" />
-=======
-              <img src="../../../public/disponibilidad.png" alt="Disponibilidad" />
->>>>>>> Stashed changes
               <h3>Disponibilidad</h3>
               <p>Configure sus horarios de atención.</p>
             </article>
@@ -142,11 +133,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/medico/citas")}
             >
-<<<<<<< Updated upstream
               <img src="/icons/agenda.svg" alt="Citas" />
-=======
-              <img src="../../../public/cita.png" alt="Citas" />
->>>>>>> Stashed changes
               <h3>Citas Asignadas</h3>
               <p>Consulte las citas programadas con sus pacientes.</p>
             </article>
@@ -158,11 +145,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/medico/historial")}
             >
-<<<<<<< Updated upstream
               <img src="/icons/medical-folder.svg" alt="Historial" />
-=======
-              <img src="../../../public/informe-medico.png" alt="Historial" />
->>>>>>> Stashed changes
               <h3>Historial Médico</h3>
               <p>Registre diagnósticos y observaciones clínicas.</p>
             </article>
@@ -173,11 +156,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               aria-disabled="true"
             >
-<<<<<<< Updated upstream
               <img src="/icons/settings.svg" alt="Configuración" />
-=======
-              <img src="../../../public/configuracion-de-la-nube.png" alt="Configuración" />
->>>>>>> Stashed changes
               <h3>Configuración</h3>
               <p>Preferencias y datos de la cuenta.</p>
               <span className="badge-soon">Próximamente</span>
