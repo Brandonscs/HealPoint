@@ -1,10 +1,10 @@
-@use "sass:color";
-
-// Colores base
-$primary: #0d6efd;
+// Variables
+$primary: #14c4c7;
+$primary-dark: #0ea3a6;
 $secondary: #6c757d;
+$text-dark: #1a1a1a;
+$text-light: #6c757d;
 
-// Estilo general de tu app
 .app-container {
   padding: 2rem;
 
@@ -18,10 +18,18 @@ $secondary: #6c757d;
     background-color: $primary;
     border-radius: 8px;
     padding: 10px 20px;
-    transition: 0.2s ease;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
 
     &:hover {
-      background-color: color.adjust($secondary, $lightness: -10%);
+      background-color: $primary-dark;
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 }

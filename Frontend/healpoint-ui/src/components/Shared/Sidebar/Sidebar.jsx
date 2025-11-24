@@ -57,20 +57,6 @@ export default function Sidebar({ usuario, onLogout }) {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Obtener color del rol
-  const getRoleColor = () => {
-    switch (rol) {
-      case "Paciente":
-        return "#4caf50";
-      case "Medico":
-        return "#2196f3";
-      case "Administrador":
-        return "#ff9800";
-      default:
-        return "#00b4c6";
-    }
-  };
-
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Botón de colapsar */}
@@ -83,10 +69,14 @@ export default function Sidebar({ usuario, onLogout }) {
         {isCollapsed ? "→" : "←"}
       </button>
 
-      {/* Encabezado */}
+      {/* Encabezado con Logo */}
       <div className="sidebar-header">
         <div className="logo-container">
-          <div className="logo-icon">⚕️</div>
+          <img 
+            src="/icons/logo2.png" 
+            alt="HealPoint Logo" 
+            className="logo-image"
+          />
           {!isCollapsed && (
             <div className="brand-info">
               <h2 className="brand">HealPoint</h2>
@@ -97,23 +87,6 @@ export default function Sidebar({ usuario, onLogout }) {
       </div>
 
       <hr className="divider" />
-
-      {/* Información del usuario */}
-      {!isCollapsed && usuario && (
-        <div className="user-info">
-          <div className="user-avatar" style={{ background: getRoleColor() }}>
-            {usuario.nombre?.charAt(0).toUpperCase() || "U"}
-          </div>
-          <div className="user-details">
-            <span className="user-name">
-              {usuario.nombre} {usuario.apellido}
-            </span>
-            <span className="user-role" style={{ background: getRoleColor() }}>
-              {rol}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Menú de navegación */}
       <nav className="menu">
@@ -138,7 +111,7 @@ export default function Sidebar({ usuario, onLogout }) {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer con Cerrar Sesión */}
       <div className="sidebar-footer">
         <button 
           className="logout-btn" 

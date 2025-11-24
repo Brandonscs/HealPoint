@@ -1,0 +1,56 @@
+@use "sass:color";
+
+// Variables basadas en tu theme oficial
+$turquesa: #00B4C6;
+$turquesa-hover: #0095A8;
+$gray-text: #6c757d;
+$white: #ffffff;
+
+.footer-container {
+  width: 100%;
+  background: $white;
+  padding: 10px 20px;
+  border-top: 2px solid $turquesa;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 9999;
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+.footer-text {
+  font-size: 13px;
+  color: $gray-text;
+  font-family: "Poppins", sans-serif;
+}
+
+.footer-links {
+  display: flex;
+  gap: 15px;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
+
+  a {
+    font-size: 13px;
+    color: $turquesa;
+    font-family: "Poppins", sans-serif;
+    transition: 0.2s ease;
+
+    &:hover {
+      color: $turquesa-hover;
+      text-decoration: underline;
+    }
+  }
+}
