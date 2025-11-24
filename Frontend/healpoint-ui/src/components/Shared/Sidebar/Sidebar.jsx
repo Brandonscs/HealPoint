@@ -10,7 +10,7 @@ export default function Sidebar({ usuario, onLogout }) {
   // Menús dinámicos por rol
   const menus = useMemo(() => ({
     Paciente: [
-      { icon: "🏠", label: "Inicio", path: "/paciente/dashboard" },
+      { icon: "🏠", label: "Inicio", path: "/dashboard-paciente" },
       { icon: "📅", label: "Mis Citas", path: "/paciente/citas" },
       { icon: "🩺", label: "Historial Médico", path: "/paciente/historial" },
       { icon: "⚙️", label: "Configuración", path: "/paciente/configuracion" },
@@ -23,7 +23,7 @@ export default function Sidebar({ usuario, onLogout }) {
       { icon: "⚙️", label: "Configuración", path: "/medico/configuracion" },
     ],
     Administrador: [
-      { icon: "🏠", label: "Inicio", path: "/admin/dashboard" },
+      { icon: "🏠", label: "Inicio", path: "/dashboard-admin" },
       { icon: "👥", label: "Usuarios", path: "/admin/usuarios" },
       { icon: "🧩", label: "Roles", path: "/admin/roles" },
       { icon: "⚙️", label: "Estados", path: "/admin/estados" },

@@ -1,5 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Auth
 import Login from "../components/Login/Login";
+
+// Paciente Views (placeholder - crear según necesites)
+// import CitaList from "../components/Paciente/CitaList/CitaList";
+// import CitaForm from "../components/Paciente/CitaForm/CitaForm";
+// import HistorialPaciente from "../components/Paciente/HistorialPaciente/HistorialPaciente";
+
 import Register from "../components/Register/Register";
 
 import Privacidad from "../components/Shared/Footer/privacidad/privacidad";
@@ -20,8 +28,6 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Autenticación */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -41,6 +47,10 @@ function AppRouter() {
         <Route path="/medico/citas" element={<CitaMedicoList />} />
         <Route path="/medico/historial" element={<HistorialMedicoForm />} />
 
+        {/* Dashboards según rol */}
+        <Route path="/dashboard-admin" element={<h1>Dashboard Admin</h1>} />
+        <Route path="/dashboard-medico" element={<h1>Dashboard Médico</h1>} />
+        <Route path="/dashboard-paciente" element={<h1>Dashboard Paciente</h1>} />
       </Routes>
 
       {/* Footer fijo para todas las vistas */}
