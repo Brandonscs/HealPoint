@@ -8,6 +8,8 @@ import com.healpoint.repository.MedicoRepository;
 import com.healpoint.repository.UsuarioRepository;
 import com.healpoint.service.MonitoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,6 +51,7 @@ public class MedicoController {
         return medico;
     }
 
+    // POST /medico/crearMedico
     @PostMapping("/crearMedico")
     public Object postMedico(
             @RequestBody Medico medico,

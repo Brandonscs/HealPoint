@@ -1,0 +1,760 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import historialService from "../../../services/historialService";
+import Navbar from "../../Shared/Navbar/Navbar";
+import Sidebar from "../../Shared/Sidebar/Sidebar";
+import "./HistorialMedicoFrom.scss";
+import Swal from "sweetalert2";
+
+export default function HistorialMedicoForm() {
+  const navigate = useNavigate();
+
+  // Estados principales
+  const [historiales, setHistoriales] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // Filtros y búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Datos del médico logueado
+  const [medicoLogueado, setMedicoLogueado] = useState(null);
+
+  // Estados del modal
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [selectedHistorial, setSelectedHistorial] = useState(null);
+
+  // Modal de detalles (solo lectura)
+  const [showDetallesModal, setShowDetallesModal] = useState(false);
+  const [historialDetalle, setHistorialDetalle] = useState(null);
+
+  // Estados del formulario
+  const [formData, setFormData] = useState({
+    idCita: "",
+    diagnostico: "",
+    tratamiento: "",
+    observaciones: "",
+    fechaRegistro: new Date().toISOString().split('T')[0]
+  });
+
+  const [formErrors, setFormErrors] = useState({});
+
+  // Confirmación de eliminación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [historialAEliminar, setHistorialAEliminar] = useState(null);
+
+  // ========================================
+  // CARGAR DATOS INICIALES
+  // ========================================
+  useEffect(() => {
+    cargarMedicoLogueado();
+    cargarHistoriales();
+  }, []);
+
+  const cargarMedicoLogueado = () => {
+    try {
+      const medicoData = JSON.parse(localStorage.getItem("medicoLogueado"));
+      if (medicoData) {
+        setMedicoLogueado(medicoData);
+      }
+    } catch {
+      Swal.fire({
+        icon: "error",
+        title: "Error al cargar datos del médico",
+        text: "No se pudieron cargar los datos del médico.",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const cargarHistoriales = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await historialService.getHistoriales();
+
+      if (Array.isArray(response.data)) {
+        const ordenados = response.data.sort((a, b) => 
+          new Date(b.fechaRegistro) - new Date(a.fechaRegistro)
+        );
+        setHistoriales(ordenados);
+      } else {
+        setHistoriales([]);
+      }
+    } catch {
+      setError("Error al cargar los historiales médicos.");
+      setHistoriales([]);
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al cargar historiales",
+        text: "No se pudieron cargar los historiales médicos. Por favor, intente nuevamente.",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("usuario");
+    localStorage.removeItem("medicoLogueado");
+    navigate("/");
+  }, [navigate]);
+
+  // ========================================
+  // FILTRADO Y BÚSQUEDA
+  // ========================================
+  const historialesFiltrados = historiales.filter((historial) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (historial.diagnostico?.toLowerCase() || "").includes(searchLower) ||
+      (historial.tratamiento?.toLowerCase() || "").includes(searchLower) ||
+      (historial.cita?.paciente?.usuario?.nombre?.toLowerCase() || "").includes(searchLower) ||
+      (historial.cita?.paciente?.usuario?.apellido?.toLowerCase() || "").includes(searchLower)
+    );
+  });
+
+  // Paginación
+  const totalPages = Math.ceil(historialesFiltrados.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const historialesPaginados = historialesFiltrados.slice(startIndex, endIndex);
+
+  const cambiarPagina = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // ========================================
+  // MANEJO DEL FORMULARIO
+  // ========================================
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validarFormulario = () => {
+    const errors = {};
+
+    if (!formData.idCita) {
+      errors.idCita = "Debe seleccionar una cita";
+    }
+
+    if (!formData.diagnostico?.trim()) {
+      errors.diagnostico = "El diagnóstico es requerido";
+    }
+
+    if (!formData.tratamiento?.trim()) {
+      errors.tratamiento = "El tratamiento es requerido";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // ========================================
+  // CRUD OPERATIONS
+  // ========================================
+  const abrirModalCrear = () => {
+    setModalMode("create");
+    setSelectedHistorial(null);
+    setFormData({
+      idCita: "",
+      diagnostico: "",
+      tratamiento: "",
+      observaciones: "",
+      fechaRegistro: new Date().toISOString().split('T')[0]
+    });
+    setFormErrors({});
+    setShowModal(true);
+  };
+
+  const abrirModalEditar = (historial) => {
+    setModalMode("edit");
+    setSelectedHistorial(historial);
+    setFormData({
+      idCita: historial.cita?.idCita || "",
+      diagnostico: historial.diagnostico || "",
+      tratamiento: historial.tratamiento || "",
+      observaciones: historial.observaciones || "",
+      fechaRegistro: historial.fechaRegistro || new Date().toISOString().split('T')[0]
+    });
+    setFormErrors({});
+    setShowModal(true);
+  };
+
+  const cerrarModal = () => {
+    setShowModal(false);
+    setSelectedHistorial(null);
+    setFormData({
+      idCita: "",
+      diagnostico: "",
+      tratamiento: "",
+      observaciones: "",
+      fechaRegistro: new Date().toISOString().split('T')[0]
+    });
+    setFormErrors({});
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validarFormulario()) {
+      return;
+    }
+
+    const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
+    const idUsuarioEditor = usuarioLocal?.idUsuario;
+
+    if (!idUsuarioEditor) {
+      Swal.fire({
+        icon: "error",
+        title: "Usuario no identificado",
+        text: "No se pudo obtener el ID del usuario.",
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        cita: { id_cita: formData.idCita },
+        diagnostico: formData.diagnostico,
+        tratamiento: formData.tratamiento,
+        observaciones: formData.observaciones
+      };
+
+      if (modalMode === "create") {
+        await historialService.crearHistorial(payload, idUsuarioEditor);
+
+        Swal.fire({
+          icon: "success",
+          title: "Historial creado",
+          text: "El historial médico fue creado exitosamente.",
+          confirmButtonColor: "#3085d6",
+        });
+
+      } else {
+        await historialService.actualizarHistorial(
+          selectedHistorial.idHistorialMedico,
+          payload,
+          idUsuarioEditor
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Historial actualizado",
+          text: "El historial médico fue actualizado correctamente.",
+          confirmButtonColor: "#3085d6",
+        });
+      }
+
+      await cargarHistoriales();
+      cerrarModal();
+
+    } catch (err) {
+      // Error 409 → Historial ya existe
+      if (err.response?.status === 409) {
+        Swal.fire({
+          icon: "warning",
+          title: "Historial existente",
+          text: err.response.data || "Ya existe un historial médico para esta cita.",
+          confirmButtonColor: "#f0ad4e",
+        });
+        return;
+      }
+
+      // Cualquier otro error
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error al guardar el historial médico.",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const abrirDetalles = (historial) => {
+    setHistorialDetalle(historial);
+    setShowDetallesModal(true);
+  };
+
+  const cerrarDetalles = () => {
+    setShowDetallesModal(false);
+    setHistorialDetalle(null);
+  };
+
+  const confirmarEliminar = (historial) => {
+    setHistorialAEliminar(historial);
+    setShowConfirmModal(true);
+  };
+
+  const eliminarHistorial = async () => {
+    if (!historialAEliminar) return;
+
+    const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
+    const idUsuarioEditor = usuarioLocal?.idUsuario;
+
+    if (!idUsuarioEditor) {
+      setError("No se pudo identificar el usuario.");
+      Swal.fire({
+        icon: "error",
+        title: "Usuario no identificado",
+        text: "No se pudo identificar el usuario.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    try {
+      await historialService.eliminarHistorial(
+        historialAEliminar.idHistorialMedico,
+        idUsuarioEditor
+      );
+      setSuccess("Historial médico eliminado exitosamente");
+      await cargarHistoriales();
+      setShowConfirmModal(false);
+      setHistorialAEliminar(null);
+      
+      Swal.fire({
+        icon: "success",
+        title: "Historial eliminado",
+        text: "El historial médico fue eliminado exitosamente.",
+        confirmButtonColor: "#3085d6",
+        timer: 2000,
+      });
+      
+      setTimeout(() => setSuccess(""), 3000);
+    } catch {
+      setError("Error al eliminar el historial médico.");
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al eliminar",
+        text: "Error al eliminar el historial médico. Por favor, intente nuevamente.",
+        confirmButtonColor: "#d33",
+      });
+      
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+
+  // ========================================
+  // FUNCIONES AUXILIARES
+  // ========================================
+  const formatearFecha = (fechaString) => {
+    if (!fechaString) return "N/A";
+    try {
+      const fecha = new Date(fechaString);
+      return fecha.toLocaleDateString("es-CO", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    } catch {
+      return "N/A";
+    }
+  };
+
+  const getNombrePaciente = (cita) => {
+    if (!cita?.paciente?.usuario) return "N/A";
+    const { nombre, apellido } = cita.paciente.usuario;
+    return `${nombre || ""} ${apellido || ""}`.trim() || "N/A";
+  };
+
+  // ========================================
+  // RENDER
+  // ========================================
+  if (loading) {
+    return (
+      <div className="historial-root">
+        <Sidebar usuario={medicoLogueado?.usuario} onLogout={handleLogout} />
+        <div className="main-area">
+          <Navbar medico={medicoLogueado} onLogout={handleLogout} />
+          <main className="content">
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Cargando historiales médicos...</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="historial-root">
+      <img src="/icons/stetho.svg" className="bg-icon i1" alt="" />
+      <img src="/icons/microscope.svg" className="bg-icon i2" alt="" />
+      <img src="/icons/calendar.svg" className="bg-icon i3" alt="" />
+
+      <Sidebar usuario={medicoLogueado?.usuario} onLogout={handleLogout} />
+
+      <div className="main-area">
+        <Navbar medico={medicoLogueado} onLogout={handleLogout} />
+
+        <main className="content">
+          <div className="historial-card">
+            <div className="card-header">
+              <div className="header-content">
+                <h1 className="title">Historiales Médicos</h1>
+                <p className="subtitle">
+                  Registre y gestione los diagnósticos y tratamientos de sus pacientes
+                </p>
+                {medicoLogueado && (
+                  <p className="medico-info">
+                    <strong>Médico:</strong> Dr. {medicoLogueado.usuario?.nombre}{" "}
+                    {medicoLogueado.usuario?.apellido}
+                  </p>
+                )}
+              </div>
+              <button className="btn-nuevo" onClick={abrirModalCrear}>
+                <span className="btn-icon">➕</span>
+                Nuevo Historial
+              </button>
+            </div>
+
+            {error && (
+              <div className="alert alert-error">
+                <span>⚠️</span>
+                {error}
+                <button onClick={() => setError("")} className="alert-close">✕</button>
+              </div>
+            )}
+
+            {success && (
+              <div className="alert alert-success">
+                <span>✓</span>
+                {success}
+                <button onClick={() => setSuccess("")} className="alert-close">✕</button>
+              </div>
+            )}
+
+            <div className="search-bar">
+              <div className="search-box">
+                <input
+                  type="text"
+                  placeholder="Buscar por paciente, diagnóstico o tratamiento..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="search-input"
+                />
+                <span className="search-icon">🔍</span>
+              </div>
+            </div>
+
+            <div className="table-wrapper">
+              <table className="historial-table">
+                <thead>
+                  <tr>
+                    <th>Paciente</th>
+                    <th>Fecha</th>
+                    <th>Diagnóstico</th>
+                    <th>Tratamiento</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historialesPaginados.length > 0 ? (
+                    historialesPaginados.map((historial) => (
+                      <tr key={historial.idHistorialMedico}>
+                        <td className="td-paciente">
+                          {getNombrePaciente(historial.cita)}
+                        </td>
+                        <td className="td-fecha">
+                          {formatearFecha(historial.fechaRegistro)}
+                        </td>
+                        <td className="td-diagnostico">
+                          {historial.diagnostico?.length > 50
+                            ? `${historial.diagnostico.substring(0, 50)}...`
+                            : historial.diagnostico || "N/A"}
+                        </td>
+                        <td className="td-tratamiento">
+                          {historial.tratamiento?.length > 50
+                            ? `${historial.tratamiento.substring(0, 50)}...`
+                            : historial.tratamiento || "N/A"}
+                        </td>
+                        <td className="td-actions">
+                          <div className="action-buttons">
+                            <button
+                              className="btn-action btn-ver"
+                              onClick={() => abrirDetalles(historial)}
+                              title="Ver detalles"
+                            >
+                              👁️
+                            </button>
+                            <button
+                              className="btn-action btn-editar"
+                              onClick={() => abrirModalEditar(historial)}
+                              title="Editar"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="btn-action btn-eliminar"
+                              onClick={() => confirmarEliminar(historial)}
+                              title="Eliminar"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="no-data">
+                        {searchTerm
+                          ? "No se encontraron historiales con el criterio de búsqueda"
+                          : "No hay historiales médicos registrados"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="page-btn"
+                  onClick={() => cambiarPagina(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  ⏪
+                </button>
+
+                {/* ⚠️ FIX: Agregamos key único para cada botón de paginación */}
+                {[...Array(Math.min(totalPages, 5))].map((_, index) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = index + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = index + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + index;
+                  } else {
+                    pageNum = currentPage - 2 + index;
+                  }
+
+                  return (
+                    <button
+                      key={`page-${pageNum}`}
+                      className={`page-number ${currentPage === pageNum ? "active" : ""}`}
+                      onClick={() => cambiarPagina(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  className="page-btn"
+                  onClick={() => cambiarPagina(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  ⏩
+                </button>
+
+                <span className="pagination-info">
+                  Mostrando {startIndex + 1}-{Math.min(endIndex, historialesFiltrados.length)} de{" "}
+                  {historialesFiltrados.length} historiales
+                </span>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                {modalMode === "create"
+                  ? "Nuevo Historial Médico"
+                  : "Editar Historial Médico"}
+              </h2>
+              <button className="modal-close" onClick={cerrarModal}>
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="form-group">
+                <label>ID de Cita *</label>
+                <input
+                  type="number"
+                  name="idCita"
+                  value={formData.idCita}
+                  onChange={handleInputChange}
+                  className={formErrors.idCita ? "error" : ""}
+                  placeholder="Ingrese el ID de la cita"
+                />
+                {formErrors.idCita && (
+                  <span className="error-message">{formErrors.idCita}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Fecha de Registro</label>
+                <input
+                  type="date"
+                  name="fechaRegistro"
+                  value={formData.fechaRegistro}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Diagnóstico *</label>
+                <textarea
+                  name="diagnostico"
+                  value={formData.diagnostico}
+                  onChange={handleInputChange}
+                  className={formErrors.diagnostico ? "error" : ""}
+                  placeholder="Describa el diagnóstico del paciente"
+                  rows="4"
+                />
+                {formErrors.diagnostico && (
+                  <span className="error-message">{formErrors.diagnostico}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Tratamiento *</label>
+                <textarea
+                  name="tratamiento"
+                  value={formData.tratamiento}
+                  onChange={handleInputChange}
+                  className={formErrors.tratamiento ? "error" : ""}
+                  placeholder="Describa el tratamiento recomendado"
+                  rows="4"
+                />
+                {formErrors.tratamiento && (
+                  <span className="error-message">{formErrors.tratamiento}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Observaciones</label>
+                <textarea
+                  name="observaciones"
+                  value={formData.observaciones}
+                  onChange={handleInputChange}
+                  placeholder="Observaciones adicionales (opcional)"
+                  rows="3"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancelar" onClick={cerrarModal}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-guardar">
+                  {modalMode === "create" ? "Crear Historial" : "Guardar Cambios"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showDetallesModal && historialDetalle && (
+        <div className="modal-overlay" onClick={cerrarDetalles}>
+          <div className="modal-content modal-detalles" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Detalles del Historial Médico</h2>
+              <button className="modal-close" onClick={cerrarDetalles}>
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="detalle-row">
+                <span className="detalle-label">Paciente:</span>
+                <span className="detalle-value">
+                  {getNombrePaciente(historialDetalle.cita)}
+                </span>
+              </div>
+
+              <div className="detalle-row">
+                <span className="detalle-label">Fecha de Registro:</span>
+                <span className="detalle-value">
+                  {formatearFecha(historialDetalle.fechaRegistro)}
+                </span>
+              </div>
+
+              <div className="detalle-row detalle-full">
+                <span className="detalle-label">Diagnóstico:</span>
+                <div className="detalle-texto">
+                  {historialDetalle.diagnostico || "Sin diagnóstico"}
+                </div>
+              </div>
+
+              <div className="detalle-row detalle-full">
+                <span className="detalle-label">Tratamiento:</span>
+                <div className="detalle-texto">
+                  {historialDetalle.tratamiento || "Sin tratamiento"}
+                </div>
+              </div>
+
+              {historialDetalle.observaciones && (
+                <div className="detalle-row detalle-full">
+                  <span className="detalle-label">Observaciones:</span>
+                  <div className="detalle-texto">
+                    {historialDetalle.observaciones}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cerrar-modal" onClick={cerrarDetalles}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmModal && (
+        <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="modal-content modal-confirm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="confirm-icon">⚠️</div>
+            <h2>¿Eliminar historial médico?</h2>
+            <p>
+              Esta acción no se puede deshacer. Se eliminará el historial del paciente{" "}
+              <strong>{getNombrePaciente(historialAEliminar?.cita)}</strong>
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn-cancelar"
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Cancelar
+              </button>
+              <button className="btn-confirmar" onClick={eliminarHistorial}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
