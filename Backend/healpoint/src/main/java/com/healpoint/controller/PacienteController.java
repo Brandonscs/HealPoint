@@ -1,7 +1,9 @@
 package com.healpoint.controller;
 
+import com.healpoint.entity.Estado;
 import com.healpoint.entity.Paciente;
 import com.healpoint.entity.Usuario;
+import com.healpoint.repository.EstadoRepository;
 import com.healpoint.repository.PacienteRepository;
 import com.healpoint.repository.UsuarioRepository;
 import com.healpoint.service.MonitoriaService;
@@ -22,6 +24,9 @@ public class PacienteController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private EstadoRepository estadoRepository;
 
     @Autowired
     private MonitoriaService monitoriaService;
@@ -69,12 +74,16 @@ public class PacienteController {
             return ResponseEntity.badRequest().body("La EPS es obligatoria.");
         }
 
-        if (pacienteRepository.findById(idUsuario).isPresent()) {
-            return ResponseEntity.badRequest()
-                    .body("Ya existe un paciente para el usuario con ID " + idUsuario);
+        Estado estado = estadoRepository.findById(1).orElse(null);
+        if (estado == null) {
+            return ResponseEntity.badRequest().body("No se encontró el estado 'Activo'.");
         }
 
-        Paciente nuevo = new Paciente(datos.getEps(), usuario);
+        Paciente nuevo = new Paciente(
+                datos.getEps(),
+                usuario,
+                estado
+        );
 
         pacienteRepository.save(nuevo);
 
@@ -138,15 +147,56 @@ public class PacienteController {
                     .body("No existe un paciente con ID " + id);
         }
 
-        pacienteRepository.delete(paciente);
+        Estado inactivo = estadoRepository.findById(2).orElse(null);
+        if (inactivo == null) {
+            return ResponseEntity.badRequest().body("No se encontró el estado 'Inactivo'.");
+        }
+
+        paciente.setEstado(inactivo);
+        pacienteRepository.save(paciente);
 
         monitoriaService.registrarAccion(
                 "paciente",
                 "DELETE",
                 idUsuarioEditor,
-                "Se eliminó el paciente ID " + id
+                "Se marcó como inactivo el paciente ID " + id
         );
 
-        return ResponseEntity.ok("Paciente eliminado correctamente.");
+        return ResponseEntity.ok("Paciente marcado como inactivo.");
+    }
+
+    @PutMapping("/activarPaciente")
+    public ResponseEntity<?> activarPaciente(
+            @RequestParam Integer id,
+            @RequestParam Integer idUsuarioEditor) {
+
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("ID inválido.");
+        }
+
+        Paciente paciente = pacienteRepository.findById(id).orElse(null);
+
+        if (paciente == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe un paciente con ID " + id);
+        }
+
+        Estado activo = estadoRepository.findById(1).orElse(null);
+
+        if (activo == null) {
+            return ResponseEntity.badRequest().body("No se encontró el estado 'Activo'.");
+        }
+
+        paciente.setEstado(activo);
+        pacienteRepository.save(paciente);
+
+        monitoriaService.registrarAccion(
+                "paciente",
+                "ACTIVATE",
+                idUsuarioEditor,
+                "Se activó el paciente ID " + id
+        );
+
+        return ResponseEntity.ok("Paciente activado correctamente.");
     }
 }
