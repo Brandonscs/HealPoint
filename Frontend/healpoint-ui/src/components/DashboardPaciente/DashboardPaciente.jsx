@@ -1,19 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import usuarioService from "../../services/usuarioService";
-import "../Administrador/Administrador.scss";
+import "../DashboardPaciente/DashboardPaciente.scss";
 
 import Navbar from "../Shared/Navbar/Navbar";
 import Sidebar from "../Shared/Sidebar/Sidebar";
 
-export default function DashboardAdmin() {
+export default function DashboardPaciente() {
   const navigate = useNavigate();
-  const [admin, setAdmin] = useState(null);
+  const [paciente, setPaciente] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    const cargarDatosAdmin = async () => {
+    const cargarDatosPaciente = async () => {
       try {
         const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
 
@@ -23,29 +23,29 @@ export default function DashboardAdmin() {
           return;
         }
 
-        // Obtener la info completa del admin
+        // Obtener la info completa del paciente desde usuarioService
         const response = await usuarioService.getUsuarioById(
           usuarioLocal.idUsuario
         );
 
-        setAdmin(response.data);
-        localStorage.setItem("adminLogueado", JSON.stringify(response.data));
+        setPaciente(response.data);
+        localStorage.setItem("pacienteLogueado", JSON.stringify(response.data));
       } catch (error) {
-        console.error("Error al cargar datos del administrador:", error);
+        console.error("Error al cargar datos del paciente:", error);
         setErrorMsg(
-          "Error al cargar los datos del administrador. Por favor, intente nuevamente."
+          "Error al cargar los datos del paciente. Por favor, intente nuevamente."
         );
       } finally {
         setLoading(false);
       }
     };
 
-    cargarDatosAdmin();
+    cargarDatosPaciente();
   }, [navigate]);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("usuario");
-    localStorage.removeItem("adminLogueado");
+    localStorage.removeItem("pacienteLogueado");
     navigate("/login");
   }, [navigate]);
 
@@ -61,7 +61,7 @@ export default function DashboardAdmin() {
       <div className="dashboard-admin-root">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p className="loading-text">Cargando datos del administrador...</p>
+          <p className="loading-text">Cargando datos del paciente...</p>
         </div>
       </div>
     );
@@ -82,79 +82,79 @@ export default function DashboardAdmin() {
     );
   }
 
-  // Si admin todavía no cargó (evita errores)
-  if (!admin) return null;
+  // Si paciente todavía no cargó (evita errores)
+  if (!paciente) return null;
 
   return (
-    <div className="dashboard-admin-root">
-      <img src="/icons/gear.svg" className="bg-icon i1" alt="" />
-      <img src="/icons/users.svg" className="bg-icon i2" alt="" />
-      <img src="/icons/calendar.svg" className="bg-icon i3" alt="" />
+    <div className="dashboard-paciente-root">
+      <img src="/icons/heart-pulse.svg" className="bg-icon i1" alt="" />
+      <img src="/icons/calendar.svg" className="bg-icon i2" alt="" />
+      <img src="/icons/stethoscope.svg" className="bg-icon i3" alt="" />
 
-      <Sidebar usuario={admin} onLogout={handleLogout} tipo="admin" />
+      <Sidebar usuario={paciente} onLogout={handleLogout} />
 
       <div className="main-area">
-        <Navbar admin={admin} onLogout={handleLogout} />
+        <Navbar paciente={paciente} onLogout={handleLogout} />
 
         <main className="content">
           <section className="hero">
             <h1>
-              Bienvenido, {admin.nombre} {admin.apellido}
+              Bienvenido, {paciente.nombre} {paciente.apellido}
             </h1>
             <p className="subtitle">
-              Supervise la información general y mantenga la configuración del sistema actualizada.
+              Gestione sus citas médicas y consulte su historial de forma rápida y segura.
             </p>
           </section>
 
           <section className="cards-grid">
             <article
               className="card"
-              onClick={() => handleNavigate("/admin/usuarios")}
+              onClick={() => handleNavigate("/paciente/agendar")}
               role="button"
             >
-              <img src="/icons/users.svg" alt="Usuarios" />
-              <h3>Gestión de Usuarios</h3>
-              <p>Cree, edite o desactive usuarios del sistema.</p>
+              <img src="/icons/calendar-plus.svg" alt="Agendar Cita" />
+              <h3>Agendar Cita</h3>
+              <p>Programe una nueva cita médica con su especialista.</p>
             </article>
 
             <article
               className="card"
-              onClick={() => handleNavigate("/admin/roles")}
+              onClick={() => handleNavigate("/paciente/citas")}
               role="button"
             >
-              <img src="/icons/gear.svg" alt="Roles" />
-              <h3>Gestión de Roles</h3>
-              <p>Administre los roles y permisos del sistema.</p>
+              <img src="/icons/calendar.svg" alt="Mis Citas" />
+              <h3>Mis Citas</h3>
+              <p>Visualice y administre sus citas programadas.</p>
             </article>
 
             <article
               className="card"
-              onClick={() => handleNavigate("/admin/estados")}
+              onClick={() => handleNavigate("/paciente/historial")}
               role="button"
             >
-              <img src="/icons/toggle.svg" alt="Estados" />
-              <h3>Gestión de Estados</h3>
-              <p>Actualice los estados de las entidades del sistema.</p>
+              <img src="/icons/file-medical.svg" alt="Historial" />
+              <h3>Historial Médico</h3>
+              <p>Consulte su historial de consultas y diagnósticos.</p>
             </article>
 
             <article
               className="card"
-              onClick={() => handleNavigate("/admin/agenda")}
+              onClick={() => handleNavigate("/paciente/configuracion")}
               role="button"
             >
-              <img src="/icons/calendar-global.svg" alt="Agenda Global" />
-              <h3>Agenda Global</h3>
-              <p>Visualice todas las citas registradas en el sistema.</p>
+              <img src="/icons/gear.svg" alt="Configuración" />
+              <h3>Configuración</h3>
+              <p>Actualice su información personal y preferencias.</p>
             </article>
 
             <article
               className="card"
-              onClick={() => handleNavigate("/admin/monitoria")}
+              onClick={() => handleNavigate("/paciente/medicos")}
               role="button"
             >
-              <img src="/icons/magnifying-glass.svg" alt="Monitoría" />
-              <h3>Monitoría del Sistema</h3>
-              <p>Revise los eventos y acciones ejecutadas por los usuarios.</p>
+              <img src="/icons/user-doctor.svg" alt="Médicos" />
+              <h3>Mis Médicos</h3>
+              <p>Vea la información de sus médicos tratantes.</p>
             </article>
           </section>
         </main>

@@ -51,6 +51,13 @@ public class MedicoController {
         return medico;
     }
 
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<Medico> obtenerMedicoPorIdUsuario(@PathVariable Integer idUsuario) {
+        return medicoRepository.findByUsuario_IdUsuario(idUsuario)
+                .map(medico -> ResponseEntity.ok(medico))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     // POST /medico/crearMedico
     @PostMapping("/crearMedico")
     public Object postMedico(
