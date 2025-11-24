@@ -34,6 +34,10 @@ const pacienteService = {
     api.put(
       `paciente/activarPaciente?id=${id}&idUsuarioEditor=${idUsuarioEditor}`
     ),
+
+    getPacientePorIdUsuario: (idUsuario) =>
+  api.get(`paciente/mostrarPacientePorIdUsuario?idUsuario=${idUsuario}`),
 };
+
 
 export default pacienteService;

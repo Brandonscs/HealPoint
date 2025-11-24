@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import citaService from "../../../services/citaService";
 import estadoService from "../../../services/estadoService";
 import Navbar from "../../Shared/Navbar/Navbar";
@@ -8,7 +7,7 @@ import Sidebar from "../../Shared/Sidebar/Sidebar";
 import "./CitaMedicoList.scss";
 import Swal from "sweetalert2";
 
-export default function CitaMedicoList() {
+export default function CitaList() {
   const navigate = useNavigate();
 
   // Estados principales
@@ -18,8 +17,8 @@ export default function CitaMedicoList() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Datos del médico logueado
-  const [medicoLogueado, setMedicoLogueado] = useState(null);
+  // Datos del paciente logueado
+  const [pacienteLogueado, setPacienteLogueado] = useState(null);
 
   // Estados disponibles desde la BD
   const [estadosDisponibles, setEstadosDisponibles] = useState([]);
@@ -27,15 +26,11 @@ export default function CitaMedicoList() {
   // Filtros
   const [filtroEstado, setFiltroEstado] = useState("TODAS");
   const [filtroFecha, setFiltroFecha] = useState("");
-  const [busquedaPaciente, setBusquedaPaciente] = useState("");
+  const [busquedaMedico, setBusquedaMedico] = useState("");
 
   // Modal de detalles
   const [showModalDetalles, setShowModalDetalles] = useState(false);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
-
-  // Modal de actualizar estado
-  const [showModalEstado, setShowModalEstado] = useState(false);
-  const [nuevoEstado, setNuevoEstado] = useState("");
 
   // ========================================
   // CARGAR ESTADOS DESDE LA BD
@@ -62,8 +57,10 @@ export default function CitaMedicoList() {
   // ========================================
   // CARGAR DATOS INICIALES
   // ========================================
-  const cargarCitas = useCallback(async (idMedico) => {
-    if (!idMedico) {
+  const cargarCitas = useCallback(async (idPaciente) => {
+    if (!idPaciente) {
+      setError("No se pudo identificar el ID del paciente.");
+      setLoading(false);
       return;
     }
 
@@ -71,13 +68,19 @@ export default function CitaMedicoList() {
       setLoading(true);
       setError("");
       
-      const response = await citaService.getCitasPorMedico(idMedico);
+      console.log("Cargando citas para paciente ID:", idPaciente);
+      const response = await citaService.getCitasPorPaciente(idPaciente);
+
+      console.log("Respuesta del servicio:", response);
 
       if (typeof response.data === 'string') {
+        // Si es un string, significa que no hay citas
+        console.log("No hay citas:", response.data);
         setCitas([]);
         setCitasFiltradas([]);
       } else if (Array.isArray(response.data)) {
         if (response.data.length > 0) {
+          console.log("Citas encontradas:", response.data.length);
           const ordenadas = response.data.sort((a, b) => {
             const fechaA = new Date(`${a.fecha}T${a.hora}`);
             const fechaB = new Date(`${b.fecha}T${b.hora}`);
@@ -86,22 +89,25 @@ export default function CitaMedicoList() {
           setCitas(ordenadas);
           setCitasFiltradas(ordenadas);
         } else {
+          console.log("Array de citas vacío");
           setCitas([]);
           setCitasFiltradas([]);
         }
       } else {
+        console.log("Respuesta no esperada:", response.data);
         setCitas([]);
         setCitasFiltradas([]);
       }
-    } catch {
-      setError("Error al cargar las citas médicas. Por favor, intente nuevamente.");
+    } catch (error) {
+      console.error("Error al cargar citas:", error);
+      setError("Error al cargar las citas. Por favor, intente nuevamente.");
       setCitas([]);
       setCitasFiltradas([]);
       
       Swal.fire({
         icon: "error",
         title: "Error al cargar citas",
-        text: "No se pudieron cargar las citas médicas. Por favor, intente nuevamente.",
+        text: "No se pudieron cargar las citas. Por favor, intente nuevamente.",
         confirmButtonColor: "#d33",
       });
     } finally {
@@ -109,7 +115,7 @@ export default function CitaMedicoList() {
     }
   }, []);
 
-  const cargarMedicoLogueado = useCallback(async () => {
+  const cargarDatosIniciales = useCallback(async () => {
     try {
       const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
 
@@ -118,33 +124,37 @@ export default function CitaMedicoList() {
         return;
       }
 
-      const response = await axios.get(
-        `http://localhost:8080/medico/usuario/${usuarioLocal.idUsuario}`
-      );
+      console.log("Usuario logueado:", usuarioLocal);
 
-      const idMedicoReal = response.data.idMedico || response.data.id_medico || response.data.Id_medico;
-
-      setMedicoLogueado(response.data);
-      localStorage.setItem("medicoLogueado", JSON.stringify(response.data));
-
-      if (idMedicoReal) {
-        await cargarCitas(idMedicoReal);
+      // Si el usuario tiene información de paciente en localStorage, la usamos
+      const pacienteLocal = JSON.parse(localStorage.getItem("pacienteLogueado"));
+      
+      if (pacienteLocal) {
+        setPacienteLogueado(pacienteLocal);
+        const idPaciente = pacienteLocal.idPaciente || pacienteLocal.id_paciente;
+        if (idPaciente) {
+          await cargarCitas(idPaciente);
+        } else {
+          setError("No se pudo identificar el ID del paciente.");
+        }
       } else {
-        setError("No se pudo identificar el ID del médico.");
-        Swal.fire({
-          icon: "error",
-          title: "Error de identificación",
-          text: "No se pudo identificar el ID del médico.",
-          confirmButtonColor: "#d33",
+        // Si no hay paciente en localStorage, asumimos que el usuario ES el paciente
+        // y usamos el ID de usuario como referencia (esto depende de tu lógica de negocio)
+        setPacienteLogueado({
+          idPaciente: usuarioLocal.idUsuario, // O el campo correcto según tu BD
+          usuario: usuarioLocal
         });
+        await cargarCitas(usuarioLocal.idUsuario);
       }
-    } catch {
-      setError("Error al cargar los datos del médico. Por favor, intente nuevamente.");
+
+    } catch (error) {
+      console.error("Error al cargar datos iniciales:", error);
+      setError("Error al cargar los datos. Por favor, intente nuevamente.");
 
       Swal.fire({
         icon: "error",
         title: "Error al cargar datos",
-        text: "Error al cargar los datos del médico. Redirigiendo al login...",
+        text: "Error al cargar los datos. Redirigiendo al login...",
         confirmButtonColor: "#d33",
         timer: 2000,
       });
@@ -156,9 +166,9 @@ export default function CitaMedicoList() {
   }, [navigate, cargarCitas]);
 
   useEffect(() => {
-    cargarMedicoLogueado();
+    cargarDatosIniciales();
     cargarEstados();
-  }, [cargarMedicoLogueado, cargarEstados]);
+  }, [cargarDatosIniciales, cargarEstados]);
 
   // ========================================
   // FILTROS
@@ -177,16 +187,16 @@ export default function CitaMedicoList() {
       resultado = resultado.filter(cita => cita.fecha === filtroFecha);
     }
 
-    if (busquedaPaciente.trim()) {
-      const busqueda = busquedaPaciente.toLowerCase();
+    if (busquedaMedico.trim()) {
+      const busqueda = busquedaMedico.toLowerCase();
       resultado = resultado.filter(cita => {
-        const nombreCompleto = `${cita.paciente?.usuario?.nombre || ""} ${cita.paciente?.usuario?.apellido || ""}`.toLowerCase();
+        const nombreCompleto = `${cita.medico?.usuario?.nombre || ""} ${cita.medico?.usuario?.apellido || ""}`.toLowerCase();
         return nombreCompleto.includes(busqueda);
       });
     }
 
     setCitasFiltradas(resultado);
-  }, [filtroEstado, filtroFecha, busquedaPaciente, citas]);
+  }, [filtroEstado, filtroFecha, busquedaMedico, citas]);
 
   useEffect(() => {
     aplicarFiltros();
@@ -195,7 +205,7 @@ export default function CitaMedicoList() {
   const limpiarFiltros = () => {
     setFiltroEstado("TODAS");
     setFiltroFecha("");
-    setBusquedaPaciente("");
+    setBusquedaMedico("");
   };
 
   // ========================================
@@ -211,79 +221,78 @@ export default function CitaMedicoList() {
     setCitaSeleccionada(null);
   };
 
-  const abrirModalEstado = (cita) => {
-    setCitaSeleccionada(cita);
-    setNuevoEstado(cita.estado?.idEstado?.toString() || "");
-    setShowModalEstado(true);
-  };
-
-  const cerrarModalEstado = () => {
-    setShowModalEstado(false);
-    setCitaSeleccionada(null);
-    setNuevoEstado("");
-  };
-
   // ========================================
-  // ACTUALIZAR ESTADO
+  // CANCELAR CITA
   // ========================================
-  const actualizarEstadoCita = async () => {
-    if (!citaSeleccionada || !nuevoEstado) {
-      Swal.fire({
-        icon: "warning",
-        title: "Datos incompletos",
-        text: "Debe seleccionar un estado para continuar.",
-        confirmButtonColor: "#f0ad4e",
-      });
-      return;
-    }
+  const cancelarCita = async (cita) => {
+    if (!cita) return;
+
+    const confirmacion = await Swal.fire({
+      title: '¿Cancelar cita?',
+      text: `¿Está seguro de cancelar la cita con el Dr. ${cita.medico?.usuario?.nombre} ${cita.medico?.usuario?.apellido}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, mantener'
+    });
+
+    if (!confirmacion.isConfirmed) return;
 
     try {
-      const idCita = citaSeleccionada.idCita || citaSeleccionada.id_cita;
+      const idCita = cita.idCita || cita.id_cita;
       
+      console.log("Cancelando cita ID:", idCita);
+      
+      // Actualizar estado a Cancelada (ID 5)
       const citaActualizada = {
         paciente: { 
-          idPaciente: citaSeleccionada.paciente?.idPaciente 
+          idPaciente: cita.paciente?.idPaciente 
         },
         medico: { 
-          id_medico: citaSeleccionada.medico?.id_medico || citaSeleccionada.medico?.idMedico 
+          id_medico: cita.medico?.id_medico || cita.medico?.idMedico 
         },
-        fecha: citaSeleccionada.fecha,
-        hora: citaSeleccionada.hora,
-        motivo: citaSeleccionada.motivo,
+        fecha: cita.fecha,
+        hora: cita.hora,
+        motivo: cita.motivo,
         estado: { 
-          idEstado: parseInt(nuevoEstado) 
+          idEstado: 5 // ID para estado "Cancelada"
         }
       };
       
-      // Llamada correcta al servicio - solo dos parámetros
+      console.log("Datos para actualizar:", citaActualizada);
+      
       await citaService.actualizarCita(idCita, citaActualizada);
       
-      setSuccess("Estado de la cita actualizado exitosamente");
+      setSuccess("Cita cancelada exitosamente");
       
-      const idMedico = medicoLogueado.idMedico || medicoLogueado.id_medico;
-      await cargarCitas(idMedico);
-      
-      cerrarModalEstado();
+      // Recargar citas
+      const idPaciente = pacienteLogueado?.idPaciente || pacienteLogueado?.id_paciente;
+      if (idPaciente) {
+        await cargarCitas(idPaciente);
+      }
 
       Swal.fire({
         icon: "success",
-        title: "Estado actualizado",
-        text: "El estado de la cita fue actualizado correctamente.",
+        title: "Cita cancelada",
+        text: "La cita fue cancelada correctamente.",
         confirmButtonColor: "#3085d6",
         timer: 2000,
       });
 
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
+      console.error("Error al cancelar cita:", err);
       const mensajeError = typeof err.response?.data === 'string' 
         ? err.response.data 
-        : err.response?.data?.message || "Error al actualizar el estado de la cita.";
+        : err.response?.data?.message || "Error al cancelar la cita.";
         
       setError(mensajeError);
 
       Swal.fire({
         icon: "error",
-        title: "Error al actualizar",
+        title: "Error al cancelar",
         text: mensajeError,
         confirmButtonColor: "#d33",
       });
@@ -297,7 +306,7 @@ export default function CitaMedicoList() {
   // ========================================
   const handleLogout = useCallback(() => {
     localStorage.removeItem("usuario");
-    localStorage.removeItem("medicoLogueado");
+    localStorage.removeItem("pacienteLogueado");
     navigate("/");
   }, [navigate]);
 
@@ -324,7 +333,8 @@ export default function CitaMedicoList() {
       "EN_CURSO": "estado-en-curso",
       "COMPLETADA": "estado-completada",
       "CANCELADA": "estado-cancelada",
-      "NO_ASISTIO": "estado-no-asistio"
+      "NO_ASISTIO": "estado-no-asistio",
+      "Pendiente": "estado-pendiente"
     };
     return colores[nombreEstado] || "estado-default";
   };
@@ -341,15 +351,14 @@ export default function CitaMedicoList() {
   // ========================================
   const calcularEstadisticas = () => {
     const total = citas.length;
-    const hoy = new Date().toISOString().split("T")[0];
-    const citasHoy = citas.filter(c => c.fecha === hoy).length;
-    const programadas = citas.filter(c => {
+    const pendientes = citas.filter(c => {
       const nombreEstado = c.estado?.nombreEstado || "";
-      return nombreEstado === "PROGRAMADA" || nombreEstado === "CONFIRMADA";
+      return nombreEstado === "PROGRAMADA" || nombreEstado === "CONFIRMADA" || nombreEstado === "Pendiente";
     }).length;
+    const canceladas = citas.filter(c => c.estado?.nombreEstado === "CANCELADA").length;
     const completadas = citas.filter(c => c.estado?.nombreEstado === "COMPLETADA").length;
 
-    return { total, citasHoy, programadas, completadas };
+    return { total, pendientes, canceladas, completadas };
   };
 
   const stats = calcularEstadisticas();
@@ -359,14 +368,14 @@ export default function CitaMedicoList() {
   // ========================================
   if (loading) {
     return (
-      <div className="citas-medico-root">
-        <Sidebar usuario={medicoLogueado?.usuario} onLogout={handleLogout} />
+      <div className="citas-paciente-root">
+        <Sidebar usuario={pacienteLogueado?.usuario} onLogout={handleLogout} />
         <div className="main-area">
-          <Navbar medico={medicoLogueado} onLogout={handleLogout} />
+          <Navbar paciente={pacienteLogueado} onLogout={handleLogout} />
           <main className="content">
             <div className="loading-container">
               <div className="loading-spinner"></div>
-              <p className="loading-text">Cargando citas médicas...</p>
+              <p className="loading-text">Cargando mis citas...</p>
             </div>
           </main>
         </div>
@@ -374,9 +383,9 @@ export default function CitaMedicoList() {
     );
   }
 
-  if (error && !medicoLogueado) {
+  if (error && !pacienteLogueado) {
     return (
-      <div className="citas-medico-root">
+      <div className="citas-paciente-root">
         <div className="error-container">
           <div className="error-icon">⚠️</div>
           <h2 className="error-title">Error</h2>
@@ -390,29 +399,28 @@ export default function CitaMedicoList() {
   }
 
   return (
-    <div className="citas-medico-root">
+    <div className="citas-paciente-root">
       <img src="/icons/stetho.svg" className="bg-icon i1" alt="" />
       <img src="/icons/microscope.svg" className="bg-icon i2" alt="" />
       <img src="/icons/calendar.svg" className="bg-icon i3" alt="" />
 
-      <Sidebar usuario={medicoLogueado?.usuario} onLogout={handleLogout} />
+      <Sidebar usuario={pacienteLogueado?.usuario} onLogout={handleLogout} />
 
       <div className="main-area">
-        <Navbar medico={medicoLogueado} onLogout={handleLogout} />
+        <Navbar paciente={pacienteLogueado} onLogout={handleLogout} />
 
         <main className="content">
           <div className="citas-card">
             <div className="card-header">
               <div className="header-content">
-                <h1 className="title">Citas Médicas</h1>
+                <h1 className="title">Mis Citas</h1>
                 <p className="subtitle">
-                  Gestione y consulte todas sus citas programadas
+                  Consulte y gestione todas sus citas médicas
                 </p>
-                {medicoLogueado && (
-                  <p className="medico-info">
-                    <strong>Médico:</strong> Dr. {medicoLogueado.usuario?.nombre}{" "}
-                    {medicoLogueado.usuario?.apellido} -{" "}
-                    <span className="especialidad">{medicoLogueado.especialidad}</span>
+                {pacienteLogueado && (
+                  <p className="paciente-info">
+                    <strong>Paciente:</strong> {pacienteLogueado.usuario?.nombre}{" "}
+                    {pacienteLogueado.usuario?.apellido}
                   </p>
                 )}
               </div>
@@ -443,17 +451,17 @@ export default function CitaMedicoList() {
                 </div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon">📅</div>
+                <div className="stat-icon">🕐</div>
                 <div className="stat-info">
-                  <span className="stat-value">{stats.citasHoy}</span>
-                  <span className="stat-label">Citas Hoy</span>
+                  <span className="stat-value">{stats.pendientes}</span>
+                  <span className="stat-label">Pendientes</span>
                 </div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon">🕐</div>
+                <div className="stat-icon">❌</div>
                 <div className="stat-info">
-                  <span className="stat-value">{stats.programadas}</span>
-                  <span className="stat-label">Pendientes</span>
+                  <span className="stat-value">{stats.canceladas}</span>
+                  <span className="stat-label">Canceladas</span>
                 </div>
               </div>
               <div className="stat-card">
@@ -492,12 +500,12 @@ export default function CitaMedicoList() {
                 </div>
 
                 <div className="filtro-group">
-                  <label>Buscar Paciente</label>
+                  <label>Buscar Médico</label>
                   <input
                     type="text"
-                    placeholder="Nombre del paciente..."
-                    value={busquedaPaciente}
-                    onChange={(e) => setBusquedaPaciente(e.target.value)}
+                    placeholder="Nombre del médico..."
+                    value={busquedaMedico}
+                    onChange={(e) => setBusquedaMedico(e.target.value)}
                   />
                 </div>
 
@@ -524,10 +532,13 @@ export default function CitaMedicoList() {
                     </div>
 
                     <div className="cita-body">
-                      <div className="paciente-info">
-                        <h3 className="paciente-nombre">
-                          {cita.paciente?.usuario?.nombre} {cita.paciente?.usuario?.apellido}
+                      <div className="medico-info">
+                        <h3 className="medico-nombre">
+                          Dr. {cita.medico?.usuario?.nombre} {cita.medico?.usuario?.apellido}
                         </h3>
+                        <p className="medico-especialidad">
+                          <strong>Especialidad:</strong> {cita.medico?.especialidad || "No especificada"}
+                        </p>
                       </div>
 
                       <div className="cita-motivo">
@@ -542,13 +553,14 @@ export default function CitaMedicoList() {
                       >
                         👁️ Ver Detalles
                       </button>
-                      {(cita.estado?.nombreEstado !== "COMPLETADA" && 
-                        cita.estado?.nombreEstado !== "CANCELADA") && (
+                      {(cita.estado?.nombreEstado === "PROGRAMADA" || 
+                        cita.estado?.nombreEstado === "CONFIRMADA" ||
+                        cita.estado?.nombreEstado === "Pendiente") && (
                         <button
-                          className="btn-action btn-estado"
-                          onClick={() => abrirModalEstado(cita)}
+                          className="btn-action btn-cancelar"
+                          onClick={() => cancelarCita(cita)}
                         >
-                          🔄 Cambiar Estado
+                          ❌ Cancelar
                         </button>
                       )}
                     </div>
@@ -596,25 +608,25 @@ export default function CitaMedicoList() {
               </div>
 
               <div className="detalle-section">
-                <h3>Información del Paciente</h3>
+                <h3>Información del Médico</h3>
                 <div className="detalle-grid">
                   <div className="detalle-item">
                     <span className="detalle-label">Nombre:</span>
                     <span className="detalle-value">
-                      {citaSeleccionada.paciente?.usuario?.nombre} {citaSeleccionada.paciente?.usuario?.apellido}
+                      Dr. {citaSeleccionada.medico?.usuario?.nombre} {citaSeleccionada.medico?.usuario?.apellido}
                     </span>
                   </div>
                   <div className="detalle-item">
-                    <span className="detalle-label">Documento:</span>
-                    <span className="detalle-value">{citaSeleccionada.paciente?.usuario?.numeroDocumento || "N/A"}</span>
+                    <span className="detalle-label">Especialidad:</span>
+                    <span className="detalle-value">{citaSeleccionada.medico?.especialidad || "N/A"}</span>
                   </div>
                   <div className="detalle-item">
                     <span className="detalle-label">Teléfono:</span>
-                    <span className="detalle-value">{citaSeleccionada.paciente?.usuario?.telefono || "N/A"}</span>
+                    <span className="detalle-value">{citaSeleccionada.medico?.usuario?.telefono || "N/A"}</span>
                   </div>
                   <div className="detalle-item">
                     <span className="detalle-label">Correo:</span>
-                    <span className="detalle-value">{citaSeleccionada.paciente?.usuario?.correo || "N/A"}</span>
+                    <span className="detalle-value">{citaSeleccionada.medico?.usuario?.correo || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -628,50 +640,6 @@ export default function CitaMedicoList() {
             <div className="modal-actions">
               <button className="btn-cerrar" onClick={cerrarModalDetalles}>
                 Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showModalEstado && citaSeleccionada && (
-        <div className="modal-overlay" onClick={cerrarModalEstado}>
-          <div className="modal-content modal-estado" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Cambiar Estado de la Cita</h2>
-              <button className="modal-close" onClick={cerrarModalEstado}>✕</button>
-            </div>
-
-            <div className="modal-body">
-              <div className="cita-info-resumen">
-                <p><strong>Paciente:</strong> {citaSeleccionada.paciente?.usuario?.nombre} {citaSeleccionada.paciente?.usuario?.apellido}</p>
-                <p><strong>Fecha:</strong> {formatearFecha(citaSeleccionada.fecha)} - {formatearHora(citaSeleccionada.hora)}</p>
-                <p><strong>Estado Actual:</strong> <span className={`estado-badge ${obtenerColorEstado(citaSeleccionada.estado)}`}>{obtenerTextoEstado(citaSeleccionada.estado)}</span></p>
-              </div>
-
-              <div className="form-group">
-                <label>Nuevo Estado</label>
-                <select
-                  value={nuevoEstado}
-                  onChange={(e) => setNuevoEstado(e.target.value)}
-                  className="estado-select"
-                >
-                  <option value="">Seleccione un estado</option>
-                  {estadosDisponibles.map(estado => (
-                    <option key={estado.idEstado} value={estado.idEstado.toString()}>
-                      {estado.nombreEstado}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="modal-actions">
-              <button className="btn-cancelar" onClick={cerrarModalEstado}>
-                Cancelar
-              </button>
-              <button className="btn-confirmar" onClick={actualizarEstadoCita}>
-                Actualizar Estado
               </button>
             </div>
           </div>

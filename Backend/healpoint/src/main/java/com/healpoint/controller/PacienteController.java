@@ -59,6 +59,31 @@ public class PacienteController {
         return ResponseEntity.ok(paciente);
     }
 
+    @GetMapping("/mostrarPacientePorIdUsuario")
+    public ResponseEntity<?> getPacienteByIdUsuario(@RequestParam Integer idUsuario) {
+
+        if (idUsuario == null || idUsuario <= 0) {
+            return ResponseEntity.badRequest().body("ID de usuario inválido.");
+        }
+
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe un usuario con ID " + idUsuario);
+        }
+
+        Paciente paciente = pacienteRepository.findByUsuario(usuario);
+
+        if (paciente == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe un paciente asociado al usuario con ID " + idUsuario);
+        }
+
+        return ResponseEntity.ok(paciente);
+    }
+
+
     @PostMapping("/crearPaciente")
     public ResponseEntity<?> crearPaciente(
             @RequestParam Integer idUsuario,

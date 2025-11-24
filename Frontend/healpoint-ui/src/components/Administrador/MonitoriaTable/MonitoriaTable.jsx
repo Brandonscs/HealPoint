@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import monitoriaService from "../../services/monitoriaService";
+import monitoriaService from "../../../services/monitoriaService";
 import "./MonitoriaTable.scss";
 
 export default function MonitoriaTable() {
