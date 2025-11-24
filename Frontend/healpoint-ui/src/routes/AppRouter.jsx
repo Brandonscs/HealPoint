@@ -2,6 +2,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Auth
 import Login from "../components/Login/Login";
+
+// Paciente Views (placeholder - crear según necesites)
+// import CitaList from "../components/Paciente/CitaList/CitaList";
+// import CitaForm from "../components/Paciente/CitaForm/CitaForm";
+// import HistorialPaciente from "../components/Paciente/HistorialPaciente/HistorialPaciente";
+
 import Register from "../components/Register/Register";
 
 // Footer Pages

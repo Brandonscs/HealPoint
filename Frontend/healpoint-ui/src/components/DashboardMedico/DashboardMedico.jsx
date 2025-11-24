@@ -121,7 +121,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/medico/disponibilidad")}
             >
-              <img src="/icons/calendar-clock.svg" alt="Disponibilidad" />
+              <img src="../../../public/disponibilidad.png" alt="Disponibilidad" />
               <h3>Disponibilidad</h3>
               <p>Configure sus horarios de atención.</p>
             </article>
@@ -133,7 +133,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/medico/citas")}
             >
-              <img src="/icons/agenda.svg" alt="Citas" />
+              <img src="../../../public/cita-medica.png" alt="Citas" />
               <h3>Citas Asignadas</h3>
               <p>Consulte las citas programadas con sus pacientes.</p>
             </article>
@@ -145,7 +145,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/medico/historial")}
             >
-              <img src="/icons/medical-folder.svg" alt="Historial" />
+              <img src="../../../public/informe-medico.png" alt="Historial" />
               <h3>Historial Médico</h3>
               <p>Registre diagnósticos y observaciones clínicas.</p>
             </article>
@@ -156,7 +156,7 @@ export default function DashboardMedico() {
               tabIndex={0}
               aria-disabled="true"
             >
-              <img src="/icons/settings.svg" alt="Configuración" />
+              <img src="../../../public/configuracion-de-la-nube.png" alt="Configuración" />
               <h3>Configuración</h3>
               <p>Preferencias y datos de la cuenta.</p>
               <span className="badge-soon">Próximamente</span>

@@ -182,7 +182,7 @@ export default function HistorialMedicoForm() {
     setModalMode("edit");
     setSelectedHistorial(historial);
     setFormData({
-      idCita: historial.cita?.idCita || "",
+      idCita: historial.cita?.idCita || historial.cita?.id_cita || "",
       diagnostico: historial.diagnostico || "",
       tratamiento: historial.tratamiento || "",
       observaciones: historial.observaciones || "",
@@ -243,8 +243,21 @@ export default function HistorialMedicoForm() {
         });
 
       } else {
+        // ✅ FIX: Usar el campo correcto del backend
+        const idHistorial = selectedHistorial.id_historial || selectedHistorial.idHistorialMedico;
+        
+        if (!idHistorial) {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudo identificar el ID del historial.",
+            confirmButtonColor: "#d33",
+          });
+          return;
+        }
+
         await historialService.actualizarHistorial(
-          selectedHistorial.idHistorialMedico,
+          idHistorial,
           payload,
           idUsuarioEditor
         );
@@ -261,6 +274,8 @@ export default function HistorialMedicoForm() {
       cerrarModal();
 
     } catch (err) {
+      console.error("Error completo:", err.response?.data || err);
+      
       // Error 409 → Historial ya existe
       if (err.response?.status === 409) {
         Swal.fire({
@@ -276,7 +291,7 @@ export default function HistorialMedicoForm() {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Error al guardar el historial médico.",
+        text: err.response?.data || "Error al guardar el historial médico.",
         confirmButtonColor: "#d33",
       });
     }
@@ -314,11 +329,21 @@ export default function HistorialMedicoForm() {
       return;
     }
 
+    // ✅ FIX: Usar el campo correcto del backend
+    const idHistorial = historialAEliminar.id_historial || historialAEliminar.idHistorialMedico;
+    
+    if (!idHistorial) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo identificar el ID del historial.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
     try {
-      await historialService.eliminarHistorial(
-        historialAEliminar.idHistorialMedico,
-        idUsuarioEditor
-      );
+      await historialService.eliminarHistorial(idHistorial, idUsuarioEditor);
       setSuccess("Historial médico eliminado exitosamente");
       await cargarHistoriales();
       setShowConfirmModal(false);
@@ -333,13 +358,14 @@ export default function HistorialMedicoForm() {
       });
       
       setTimeout(() => setSuccess(""), 3000);
-    } catch {
+    } catch (err) {
+      console.error("Error al eliminar:", err.response?.data || err);
       setError("Error al eliminar el historial médico.");
       
       Swal.fire({
         icon: "error",
         title: "Error al eliminar",
-        text: "Error al eliminar el historial médico. Por favor, intente nuevamente.",
+        text: err.response?.data || "Error al eliminar el historial médico. Por favor, intente nuevamente.",
         confirmButtonColor: "#d33",
       });
       
@@ -417,7 +443,10 @@ export default function HistorialMedicoForm() {
                 )}
               </div>
               <button className="btn-nuevo" onClick={abrirModalCrear}>
-                <span className="btn-icon">➕</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
                 Nuevo Historial
               </button>
             </div>
@@ -467,51 +496,65 @@ export default function HistorialMedicoForm() {
                 </thead>
                 <tbody>
                   {historialesPaginados.length > 0 ? (
-                    historialesPaginados.map((historial) => (
-                      <tr key={historial.idHistorialMedico}>
-                        <td className="td-paciente">
-                          {getNombrePaciente(historial.cita)}
-                        </td>
-                        <td className="td-fecha">
-                          {formatearFecha(historial.fechaRegistro)}
-                        </td>
-                        <td className="td-diagnostico">
-                          {historial.diagnostico?.length > 50
-                            ? `${historial.diagnostico.substring(0, 50)}...`
-                            : historial.diagnostico || "N/A"}
-                        </td>
-                        <td className="td-tratamiento">
-                          {historial.tratamiento?.length > 50
-                            ? `${historial.tratamiento.substring(0, 50)}...`
-                            : historial.tratamiento || "N/A"}
-                        </td>
-                        <td className="td-actions">
-                          <div className="action-buttons">
-                            <button
-                              className="btn-action btn-ver"
-                              onClick={() => abrirDetalles(historial)}
-                              title="Ver detalles"
-                            >
-                              👁️
-                            </button>
-                            <button
-                              className="btn-action btn-editar"
-                              onClick={() => abrirModalEditar(historial)}
-                              title="Editar"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              className="btn-action btn-eliminar"
-                              onClick={() => confirmarEliminar(historial)}
-                              title="Eliminar"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    historialesPaginados.map((historial) => {
+                      const idHistorial = historial.id_historial || historial.idHistorialMedico;
+                      return (
+                        <tr key={idHistorial}>
+                          <td className="td-paciente">
+                            {getNombrePaciente(historial.cita)}
+                          </td>
+                          <td className="td-fecha">
+                            {formatearFecha(historial.fechaRegistro)}
+                          </td>
+                          <td className="td-diagnostico">
+                            {historial.diagnostico?.length > 50
+                              ? `${historial.diagnostico.substring(0, 50)}...`
+                              : historial.diagnostico || "N/A"}
+                          </td>
+                          <td className="td-tratamiento">
+                            {historial.tratamiento?.length > 50
+                              ? `${historial.tratamiento.substring(0, 50)}...`
+                              : historial.tratamiento || "N/A"}
+                          </td>
+                          <td className="td-actions">
+                            <div className="action-buttons">
+                              <button
+                                className="btn-action btn-ver"
+                                onClick={() => abrirDetalles(historial)}
+                                title="Ver detalles"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                  <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                              </button>
+                              <button
+                                className="btn-action btn-editar"
+                                onClick={() => abrirModalEditar(historial)}
+                                title="Editar"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                              </button>
+                              <button
+                                className="btn-action btn-eliminar"
+                                onClick={() => confirmarEliminar(historial)}
+                                title="Eliminar"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6"></polyline>
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan="5" className="no-data">
@@ -535,7 +578,6 @@ export default function HistorialMedicoForm() {
                   ⏪
                 </button>
 
-                {/* ⚠️ FIX: Agregamos key único para cada botón de paginación */}
                 {[...Array(Math.min(totalPages, 5))].map((_, index) => {
                   let pageNum;
                   if (totalPages <= 5) {
