@@ -149,7 +149,7 @@ export default function DashboardAdmin() {
 
             <article
               className="card"
-              onClick={() => handleNavigate("/admin/monitoria")}
+              onClick={() => handleNavigate("/admin/monitoreo")}  
               role="button"
             >
               <img src="../../../public/supervision.png" alt="Monitoría" />
