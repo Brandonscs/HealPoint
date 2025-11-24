@@ -1,9 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
 import monitoriaService from "../../../services/monitoriaService";
-import usuarioService from "../../../services/usuarioService";
-import Navbar from "../../Shared/Navbar/Navbar";
-import Sidebar from "../../Shared/Sidebar/Sidebar";
 import "./MonitoriaTable.scss";
 
 export default function MonitoriaTable() {

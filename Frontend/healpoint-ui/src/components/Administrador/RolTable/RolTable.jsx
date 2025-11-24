@@ -129,7 +129,14 @@ export default function RolTable() {
         await rolService.actualizarRol(dataActualizar, idUsuario);
       } else {
         // Crear
-        await rolService.crearRol(formData, idUsuario);
+        await rolService.crearRol(
+        {
+            nombreRol: formData.nombreRol,
+            descripcion: formData.descripcion,
+            estado: { idEstado: 1}
+        },
+        idUsuario
+        );
       }
       
       // Recargar roles
@@ -144,28 +151,47 @@ export default function RolTable() {
   };
 
   const handleToggleEstado = async (rol) => {
-    const accion = rol.estado?.nombreEstado === "Activo" ? "desactivar" : "activar";
-    
-    if (!window.confirm(`¿Está seguro de ${accion} el rol "${rol.nombreRol}"?`)) {
+  const accion = rol.estado?.nombreEstado === "Activo" ? "desactivar" : "activar";
+  
+  if (!window.confirm(`¿Está seguro de ${accion} el rol "${rol.nombreRol}"?`)) {
+    return;
+  }
+
+  try {
+    const idUsuario = admin.idUsuario;
+
+    if (rol.estado?.nombreEstado === "Activo") {
+      await rolService.eliminarRol(rol.idRol, idUsuario);
+    } else {
+      await rolService.activarRol(rol.idRol, idUsuario);
+    }
+
+    // Recargar roles
+    const rolesResponse = await rolService.getRoles();
+    setRoles(rolesResponse.data);
+    setRolesOriginales(rolesResponse.data);
+  } catch (error) {
+    console.error("Error al cambiar estado del rol:", error);
+    alert("Error al cambiar el estado del rol");
+  }
+};
+
+  const handleDelete = async (rol) => {
+    if (!window.confirm(`¿Está seguro de eliminar el rol "${rol.nombreRol}"?`)) {
       return;
     }
 
     try {
       const idUsuario = admin.idUsuario;
-
-      if (rol.estado?.nombreEstado === "Activo") {
-        await rolService.eliminarRol(rol.idRol, idUsuario);
-      } else {
-        await rolService.activarRol(rol.idRol, idUsuario);
-      }
-
+      await rolService.eliminarRol(rol.idRol, idUsuario);
+      
       // Recargar roles
       const rolesResponse = await rolService.getRoles();
       setRoles(rolesResponse.data);
       setRolesOriginales(rolesResponse.data);
     } catch (error) {
-      console.error("Error al cambiar estado del rol:", error);
-      alert("Error al cambiar el estado del rol");
+      console.error("Error al eliminar rol:", error);
+      alert("Error al eliminar el rol");
     }
   };
 
@@ -194,7 +220,7 @@ export default function RolTable() {
     return (
       <div className="dashboard-admin-root">
         <div className="error-container">
-          <div className="error-icon">⚠</div>
+          <div className="error-icon">⚠️</div>
           <h2 className="error-title">Error</h2>
           <p className="error-message">{errorMsg}</p>
         </div>
@@ -239,11 +265,7 @@ export default function RolTable() {
               </select>
 
               <button className="btn-nuevo" onClick={handleCreate}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Nuevo Rol
+                ➕ Nuevo Rol
               </button>
             </div>
 
@@ -284,43 +306,26 @@ export default function RolTable() {
                           </span>
                         </td>
                         <td>
-                          <div className="action-buttons">
+                        <div className="action-buttons">
                             <button
-                              className="btn-action btn-edit"
-                              onClick={() => handleEdit(rol)}
-                              title="Editar rol"
+                            className="btn-action btn-edit"
+                            onClick={() => handleEdit(rol)}
+                            title="Editar"
                             >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                              </svg>
+                            ✏️
                             </button>
                             <button
-                              className="btn-action btn-toggle"
-                              onClick={() => handleToggleEstado(rol)}
-                              title={
+                            className="btn-action btn-toggle"
+                            onClick={() => handleToggleEstado(rol)}
+                            title={
                                 rol.estado?.nombreEstado === "Activo"
-                                  ? "Desactivar rol"
-                                  : "Activar rol"
-                              }
+                                ? "Desactivar"
+                                : "Activar"
+                            }
                             >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                {rol.estado?.nombreEstado === "Activo" ? (
-                                  // Icono de candado cerrado
-                                  <>
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                  </>
-                                ) : (
-                                  // Icono de candado abierto
-                                  <>
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-                                  </>
-                                )}
-                              </svg>
+                            {rol.estado?.nombreEstado === "Activo" ? "🔓" : "🔒"}
                             </button>
-                          </div>
+                        </div>
                         </td>
                       </tr>
                     ))
@@ -373,13 +378,7 @@ export default function RolTable() {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingRol ? "Editar Rol" : "Nuevo Rol"}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
-                ✕
-              </button>
-            </div>
-            
+            <h2>{editingRol ? "Editar Rol" : "Nuevo Rol"}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Nombre del Rol *</label>
@@ -416,7 +415,7 @@ export default function RolTable() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-guardar">
-                  {editingRol ? "Guardar Cambios" : "Crear Rol"}
+                  Guardar
                 </button>
               </div>
             </form>

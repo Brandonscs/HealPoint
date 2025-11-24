@@ -1,0 +1,192 @@
+/* ================================
+   CITA LIST - Paciente
+   Estilo moderno HealPoint
+   ================================ */
+
+.citas-paciente-root {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e8f9fb 0%, #dff3f8 100%);
+
+  .main-area {
+    flex: 1;
+    padding: 2rem;
+    position: relative;
+  }
+}
+
+/* Card principal */
+.citas-card {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 18px;
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.4s ease;
+  margin-top: 2rem;
+
+  .title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0097a7;
+    margin-bottom: 1.5rem;
+    border-left: 6px solid #00b4c6;
+    padding-left: 12px;
+  }
+}
+
+/* Lista de citas */
+.citas-list {
+  display: grid;
+  gap: 1.5rem;
+
+  .cita-item {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
+    border-left: 6px solid #00b4c6;
+    transition: all 0.25s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .cita-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+
+      .fecha {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #004d56;
+      }
+
+      .hora {
+        font-size: 1rem;
+        color: #006b75;
+      }
+    }
+
+    .medico-nombre {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.4rem;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+    }
+
+    /* Acciones */
+    .cita-actions {
+      display: flex;
+      margin-top: 1.4rem;
+
+      .btn-cancelar {
+        background: #ffebee;
+        color: #d32f2f;
+        padding: 0.7rem 1.4rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.25s;
+
+        &:hover {
+          background: #ffcdd2;
+          transform: translateY(-2px);
+        }
+      }
+    }
+  }
+}
+
+/* Badge de estados */
+.estado-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.estado-programada,
+  &.estado-pendiente {
+    background: #fff4ce;
+    color: #8a6d00;
+  }
+
+  &.estado-confirmada {
+    background: #d0f1f5;
+    color: #006b75;
+  }
+
+  &.estado-completada {
+    background: #d9f3e4;
+    color: #2e7d32;
+  }
+
+  &.estado-cancelada {
+    background: #fde0e0;
+    color: #b71c1c;
+  }
+
+  &.estado-default {
+    background: #e0e0e0;
+    color: #555;
+  }
+}
+
+/* Loading */
+.loading-container {
+  text-align: center;
+  padding: 3rem;
+
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #cbecef;
+    border-top-color: #0097a7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  p {
+    font-size: 1.2rem;
+    color: #0097a7;
+    font-weight: 600;
+  }
+}
+
+/* No citas */
+.no-citas {
+  text-align: center;
+  padding: 3rem;
+
+  .no-citas-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #00b4c6;
+  }
+
+  h3 {
+    font-size: 1.6rem;
+    color: #333;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}

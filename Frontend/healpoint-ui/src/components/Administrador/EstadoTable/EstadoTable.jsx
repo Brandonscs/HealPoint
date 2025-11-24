@@ -147,7 +147,7 @@ export default function EstadoTable() {
     return (
       <div className="dashboard-admin-root">
         <div className="error-container">
-          <div className="error-icon">⚠</div>
+          <div className="error-icon">⚠️</div>
           <h2 className="error-title">Error</h2>
           <p className="error-message">{errorMsg}</p>
         </div>
@@ -214,13 +214,13 @@ export default function EstadoTable() {
                               className="btn-action btn-edit"
                               onClick={() => handleEdit(estado)}
                             >
-                              ✏
+                              ✏️
                             </button>
                             <button
                               className="btn-action btn-delete"
                               onClick={() => handleDelete(estado)}
                             >
-                              🗑
+                              🗑️
                             </button>
                           </div>
                         </td>
