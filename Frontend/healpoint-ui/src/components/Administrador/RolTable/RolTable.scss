@@ -1,0 +1,478 @@
+/* ========================================
+   GESTIÓN DE ROLES - RolTable
+   ======================================== */
+
+.rol-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px;
+}
+
+/* Encabezado */
+.rol-header {
+  margin-bottom: 20px;
+
+  h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #00838f;
+    margin: 0;
+  }
+}
+
+/* Barra de acciones */
+.rol-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+
+  .search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #00b4c6;
+      box-shadow: 0 0 0 3px rgba(0, 180, 198, 0.1);
+    }
+
+    &::placeholder {
+      color: #999;
+    }
+  }
+
+  .estado-select {
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    background: white;
+    transition: all 0.3s ease;
+    min-width: 150px;
+
+    &:focus {
+      outline: none;
+      border-color: #00b4c6;
+    }
+  }
+
+  .btn-nuevo {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #00b4c6 0%, #0095a8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 180, 198, 0.3);
+    white-space: nowrap;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 180, 198, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Tabla */
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Poppins', sans-serif;
+
+  thead {
+    background: linear-gradient(135deg, #00b4c6 0%, #0095a8 100%);
+
+    tr th {
+      padding: 16px;
+      text-align: left;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &:first-child {
+        border-top-left-radius: 8px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 8px;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f0f0f0;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #f8f9fa;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      &:nth-child(even) {
+        background: #fafafa;
+
+        &:hover {
+          background: #f8f9fa;
+        }
+      }
+
+      &:last-child {
+        border-bottom: none;
+
+        td:first-child {
+          border-bottom-left-radius: 8px;
+        }
+
+        td:last-child {
+          border-bottom-right-radius: 8px;
+        }
+      }
+
+      td {
+        padding: 16px;
+        font-size: 0.95rem;
+        color: #333;
+
+        &.no-data {
+          text-align: center;
+          padding: 3rem;
+          color: #999;
+          font-style: italic;
+          font-size: 1.1rem;
+        }
+
+        strong {
+          color: #00838f;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+/* Estado Badge */
+.estado-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+
+  &.activo {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  &.inactivo {
+    background: #f8d7da;
+    color: #721c24;
+  }
+}
+
+/* Botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+
+  .btn-action {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.btn-edit {
+      background: #e3f2fd;
+
+      &:hover {
+        background: #2196f3;
+        transform: scale(1.1);
+      }
+    }
+
+    &.btn-toggle {
+      background: #fff3cd;
+
+      &:hover {
+        background: #ffc107;
+        transform: scale(1.1);
+      }
+    }
+
+    &.btn-delete {
+      background: #ffebee;
+
+      &:hover {
+        background: #f44336;
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+/* Paginación */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #f0f0f0;
+
+  .page-btn {
+    padding: 8px 14px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+
+    &:hover:not(:disabled) {
+      background: #00b4c6;
+      color: white;
+      border-color: #00b4c6;
+      transform: translateY(-2px);
+    }
+
+    &.active {
+      background: #00b4c6;
+      color: white;
+      border-color: #00b4c6;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+
+  .page-info {
+    margin-left: 15px;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+  }
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  animation: slideUp 0.3s ease;
+
+  h2 {
+    font-family: 'Poppins', sans-serif;
+    margin: 0 0 1.5rem;
+    font-size: 1.8rem;
+    color: #00838f;
+    font-weight: 700;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+
+      &:focus {
+        outline: none;
+        border-color: #00b4c6;
+        box-shadow: 0 0 0 3px rgba(0, 180, 198, 0.1);
+      }
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 2rem;
+
+    button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &.btn-cancelar {
+        background: #e0e0e0;
+        color: #333;
+
+        &:hover {
+          background: #d0d0d0;
+          transform: translateY(-2px);
+        }
+      }
+
+      &.btn-guardar {
+        background: linear-gradient(135deg, #00b4c6 0%, #0095a8 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 180, 198, 0.3);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(0, 180, 198, 0.4);
+        }
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rol-container {
+    padding: 15px;
+    margin: 10px;
+  }
+
+  .rol-actions {
+    flex-direction: column;
+
+    .search-input,
+    .estado-select,
+    .btn-nuevo {
+      width: 100%;
+    }
+  }
+
+  .roles-table {
+    font-size: 0.85rem;
+
+    thead tr th,
+    tbody tr td {
+      padding: 12px 8px;
+    }
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    width: 95%;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 5px;
+
+    .page-btn {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+
+    .page-info {
+      width: 100%;
+      text-align: center;
+      margin-left: 0;
+      margin-top: 10px;
+    }
+  }
+}
