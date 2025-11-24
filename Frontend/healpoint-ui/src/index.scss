@@ -1,31 +1,63 @@
-/* Estilos globales */
+@use "sass:color";
+@import "bootstrap-icons/font/bootstrap-icons.css";
 
-/* Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Fondo general */
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
 body {
   font-family: "Inter", system-ui, sans-serif;
   background: #f4f6f9;
   color: #1a1a1a;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  min-height: 100vh;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Links */
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
 a {
   text-decoration: none;
   color: #0d6efd;
+  transition: color 0.2s ease;
 
   &:hover {
+    color: color.adjust(#0d6efd, $lightness: -10%);
     text-decoration: underline;
   }
+}
+
+:root {
+  --primary: #14c4c7;
+  --primary-dark: #0ea3a6;
+  --primary-light: #D6FAFA;
+
+  --blue-strong: #003c5f;
+  --blue-soft: #38b6ff;
+
+  --white: #ffffff;
+  --gray-100: #f4f6f9;
+  --gray-300: #d4d4d4;
+  --gray-600: #6c757d;
+  --gray-900: #1a1a1a;
+}
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
 }

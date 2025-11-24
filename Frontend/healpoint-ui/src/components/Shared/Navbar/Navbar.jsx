@@ -6,165 +6,104 @@ const Navbar = ({ medico, paciente, admin, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determinar datos del usuario según el rol
+  // -------------------------------------------------------------------
+  // OBTENER DATOS DEL USUARIO (admin, medico o paciente)
+  // -------------------------------------------------------------------
   const userData = useMemo(() => {
+    // Caso 1: Admin (estructura directa)
+    if (admin) {
+      return {
+        nombre: `${admin.nombre} ${admin.apellido}`,
+        nombreCorto: admin.nombre,
+        rol: admin.rol?.nombreRol || "Administrador",
+        tipo: "admin",
+      };
+    }
+
+    // Caso 2: Médico (tiene usuario anidado)
     if (medico) {
       return {
         nombre: `Dr. ${medico.usuario?.nombre} ${medico.usuario?.apellido}`,
         nombreCorto: medico.usuario?.nombre,
         rol: "Médico",
-        especialidad: medico.especialidad,
-        correo: medico.usuario?.correo,
-        tipo: "medico"
+        tipo: "medico",
       };
     }
+
+    // Caso 3: Paciente (estructura directa, igual que admin)
     if (paciente) {
       return {
-        nombre: `${paciente.usuario?.nombre} ${paciente.usuario?.apellido}`,
-        nombreCorto: paciente.usuario?.nombre,
-        rol: "Paciente",
-        correo: paciente.usuario?.correo,
-        tipo: "paciente"
+        nombre: `${paciente.nombre} ${paciente.apellido}`,
+        nombreCorto: paciente.nombre,
+        rol: paciente.rol?.nombreRol || "Paciente",
+        tipo: "paciente",
       };
     }
-    if (admin) {
-      return {
-        nombre: `${admin.usuario?.nombre} ${admin.usuario?.apellido}`,
-        nombreCorto: admin.usuario?.nombre,
-        rol: "Administrador",
-        correo: admin.usuario?.correo,
-        tipo: "admin"
-      };
-    }
+
+    // Default
     return {
       nombre: "Usuario",
       nombreCorto: "Usuario",
       rol: "Invitado",
-      tipo: "guest"
+      tipo: "guest",
     };
   }, [medico, paciente, admin]);
 
-  // Obtener inicial del usuario
-  const getInitial = () => {
-    if (!userData.nombreCorto) return "U";
-    return userData.nombreCorto.charAt(0).toUpperCase();
-  };
+  const getInitial = () =>
+    userData.nombreCorto?.charAt(0)?.toUpperCase() || "U";
 
-  // Navegación según el rol
-  const navLinks = useMemo(() => {
-    switch (userData.tipo) {
-      case "medico":
-        return [
-          { label: "Inicio", path: "/dashboard-medico", icon: "🏠" },
-          { label: "Disponibilidad", path: "/medico/disponibilidad", icon: "🕒" },
-          { label: "Citas", path: "/medico/citas", icon: "📅" },
-          { label: "Historial", path: "/medico/historial", icon: "📋" }
-        ];
-      case "paciente":
-        return [
-          { label: "Inicio", path: "/paciente/dashboard", icon: "🏠" },
-          { label: "Mis Citas", path: "/paciente/citas", icon: "📅" },
-          { label: "Agendar", path: "/paciente/agendar", icon: "➕" },
-          { label: "Historial", path: "/paciente/historial", icon: "📋" }
-        ];
-      case "admin":
-        return [
-          { label: "Inicio", path: "/admin/dashboard", icon: "🏠" },
-          { label: "Usuarios", path: "/admin/usuarios", icon: "👥" },
-          { label: "Médicos", path: "/admin/medicos", icon: "⚕️" },
-          { label: "Agenda", path: "/admin/agenda", icon: "📆" }
-        ];
-      default:
-        return [
-          { label: "Inicio", path: "/", icon: "🏠" },
-          { label: "Ayuda", path: "/ayuda", icon: "❓" },
-          { label: "Contacto", path: "/contacto", icon: "📧" }
-        ];
-    }
-  }, [userData.tipo]);
+  // -------------------------------------------------------------------
+  // HANDLERS
+  // -------------------------------------------------------------------
 
-  // Verificar si una ruta está activa
-  const isActiveLink = (path) => {
-    return location.pathname === path;
-  };
-
-  // Manejar navegación
-  const handleNavigate = (path) => {
-    navigate(path);
-  };
-
-  // Manejar logout
   const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    } else {
-      localStorage.clear();
-      navigate("/");
-    }
+    onLogout?.();
+    localStorage.clear();
+    navigate("/");
   };
 
+  // -------------------------------------------------------------------
+  // RENDER
+  // -------------------------------------------------------------------
   return (
     <nav className="navbar-hp">
-      {/* Logo */}
-      <div 
-        className="navbar-logo" 
-        onClick={() => handleNavigate("/")}
-        role="button"
-        tabIndex={0}
-        onKeyPress={(e) => e.key === 'Enter' && handleNavigate("/")}
-      >
-        <span className="logo-icon">⚕️</span>
-        <span className="logo-text">HealPoint</span>
+      {/* IZQUIERDA: LOGO Y HEALPOINT ============================== */}
+      <div className="navbar-left">
+        <div className="navbar-logo" onClick={() => navigate("/")}>
+          <img src="/icons/logo2.png" alt="HealPoint Logo" className="logo-img" />
+          <span className="logo-text">HealPoint</span>
+        </div>
       </div>
 
-      {/* Enlaces de navegación centrales */}
-      <div className="navbar-links">
-        {navLinks.map((link, index) => (
-          <button
-            key={index}
-            className={`nav-link ${isActiveLink(link.path) ? 'active' : ''}`}
-            onClick={() => handleNavigate(link.path)}
-            title={link.label}
+      {/* DERECHA: PERFIL CON INICIAL, NOMBRE Y ROL ================ */}
+      <div className="navbar-right">
+        <div className="navbar-profile">
+          <div className="profile-avatar">{getInitial()}</div>
+
+          <div className="profile-info">
+            <span className="profile-name">{userData.nombreCorto}</span>
+            <span className="profile-role">{userData.rol}</span>
+          </div>
+
+          <button 
+            className="logout-btn" 
+            onClick={handleLogout}
+            title="Cerrar sesión"
           >
-            <span className="nav-icon">{link.icon}</span>
-            <span className="nav-label">{link.label}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
           </button>
-        ))}
-      </div>
-
-      {/* Perfil del usuario */}
-      <div className="navbar-profile">
-        <div className="profile-avatar" title={userData.nombre}>
-          {getInitial()}
         </div>
-
-        <div className="profile-info">
-          <span className="profile-name">{userData.nombreCorto}</span>
-          <span className="profile-role">{userData.rol}</span>
-        </div>
-
-        <button 
-          className="logout-btn" 
-          onClick={handleLogout} 
-          title="Cerrar sesión"
-          aria-label="Cerrar sesión"
-        >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-        </button>
       </div>
     </nav>
   );

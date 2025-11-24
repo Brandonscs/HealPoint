@@ -41,18 +41,14 @@
   &.collapsed {
     width: 70px;
 
-    .sidebar-header {
-      .brand-info {
-        opacity: 0;
-        width: 0;
-      }
+    .brand-info {
+      opacity: 0;
+      width: 0;
     }
 
-    .user-info {
-      padding: 0;
-      height: 0;
-      opacity: 0;
-      margin: 0;
+    .logo-image {
+      width: 35px;
+      height: 35px;
     }
 
     .menu-item {
@@ -66,12 +62,19 @@
 
     .logout-btn {
       justify-content: center;
+      
+      span:not(.logout-icon) {
+        display: none;
+      }
     }
 
     .copy {
       display: none;
     }
   }
+
+  /* Animación de entrada */
+  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ========================================
@@ -114,7 +117,7 @@
 }
 
 /* ========================================
-   ENCABEZADO
+   ENCABEZADO Y LOGO
    ======================================== */
 .sidebar-header {
   padding: 0 15px 15px;
@@ -124,10 +127,12 @@
     align-items: center;
     gap: 12px;
     
-    .logo-icon {
-      font-size: 2.5rem;
-      animation: pulse 2s ease-in-out infinite;
+    .logo-image {
+      width: 45px;
+      height: 45px;
+      object-fit: contain;
       flex-shrink: 0;
+      transition: all 0.3s ease;
     }
 
     .brand-info {
@@ -154,11 +159,6 @@
   }
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
 /* ========================================
    DIVISOR
    ======================================== */
@@ -166,65 +166,6 @@
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.25);
   margin: 15px 15px 20px;
-}
-
-/* ========================================
-   INFORMACIÓN DEL USUARIO
-   ======================================== */
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 15px;
-  margin: 0 10px 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .user-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-    background: #2196f3;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
-  }
-
-  .user-details {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    overflow: hidden;
-
-    .user-name {
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .user-role {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 8px;
-      background: #2196f3;
-      width: fit-content;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-  }
 }
 
 /* ========================================
@@ -274,7 +215,6 @@
     animation: blink 1.5s ease-in-out infinite;
   }
 
-  // Efecto hover
   &:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: translateX(5px);
@@ -284,7 +224,6 @@
     }
   }
 
-  // Estado activo
   &.active {
     background: rgba(255, 255, 255, 0.25);
     font-weight: 700;
@@ -301,21 +240,14 @@
     }
   }
 
-  // Focus state
   &:focus {
     outline: 2px solid white;
     outline-offset: 2px;
   }
 
-  // Active state (al hacer clic)
   &:active {
     transform: translateX(3px);
   }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
 }
 
 /* ========================================
@@ -404,6 +336,25 @@
 }
 
 /* ========================================
+   ANIMACIONES
+   ======================================== */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ========================================
    RESPONSIVE DESIGN
    ======================================== */
 @media (max-width: 980px) {
@@ -429,61 +380,5 @@
   .sidebar {
     width: 280px;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* ========================================
-   ANIMACIONES DE ENTRADA
-   ======================================== */
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.sidebar {
-  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ========================================
-   TEMA OSCURO (OPCIONAL)
-   ======================================== */
-.sidebar.dark-theme {
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-
-  .collapse-btn {
-    background: #1a1a2e;
-  }
-
-  .user-info {
-    background: rgba(255, 255, 255, 0.05);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-  }
-
-  .menu-item {
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    &.active {
-      background: rgba(255, 255, 255, 0.15);
-    }
-  }
-
-  .logout-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-
-    &:hover {
-      background: rgba(255, 107, 107, 0.2);
-    }
   }
 }

@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./DashboardMedico.scss";
-import Navbar from "../Navbar/Navbar";
-import Sidebar from "../Sidebar/Sidebar";
+import Navbar from "../Shared/Navbar/Navbar";
+import Sidebar from "../Shared/Sidebar/Sidebar";
 
 export default function DashboardMedico() {
   const navigate = useNavigate();
@@ -162,11 +162,6 @@ export default function DashboardMedico() {
               <span className="badge-soon">Próximamente</span>
             </article>
           </section>
-
-          {/* Footer */}
-          <footer className="footer">
-            © 2025 HealPoint – Portal Médico.
-          </footer>
         </main>
       </div>
     </div>

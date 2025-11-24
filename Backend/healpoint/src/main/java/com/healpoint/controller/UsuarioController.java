@@ -110,7 +110,7 @@ public class UsuarioController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Usuario creado exitosamente.");
+                .body(datos);
     }
 
     @PutMapping("/actualizarUsuario")
