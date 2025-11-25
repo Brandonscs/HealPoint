@@ -176,8 +176,11 @@ $transition: all 0.3s ease;
     transition: $transition;
     box-shadow: 0 4px 12px rgba(0, 180, 198, 0.3);
 
-    .btn-icon {
-      font-size: 18px;
+    // ✅ FIX: Dimensiones para el SVG
+    svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
     }
 
     &:hover {
@@ -378,7 +381,7 @@ $transition: all 0.3s ease;
 }
 
 /* ========================================
-   BOTONES DE ACCIÓN
+   BOTONES DE ACCIÓN - ✅ CORREGIDO
    ======================================== */
 .action-buttons {
   display: flex;
@@ -392,11 +395,18 @@ $transition: all 0.3s ease;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: $transition;
+  padding: 0; // ✅ IMPORTANTE: Eliminar padding extra
+
+  // ✅ FIX: Dimensiones para los SVG
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
 
   &.btn-ver {
     background: #f3e5f5;

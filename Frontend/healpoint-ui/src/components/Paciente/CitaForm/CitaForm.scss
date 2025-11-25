@@ -1,0 +1,406 @@
+// ================================
+// VARIABLES DE COLOR
+// ================================
+$turquesa-primary: #4dd0e1;
+$turquesa-light: #b2ebf2;
+$turquesa-dark: #00acc1;
+$white: #ffffff;
+$gray-light: #f5f5f5;
+$gray-medium: #e0e0e0;
+$gray-dark: #757575;
+$text-primary: #333333;
+$text-secondary: #666666;
+$error-color: #f44336;
+$success-color: #4caf50;
+
+// ================================
+// LAYOUT PRINCIPAL
+// ================================
+.cita-form-root {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, $turquesa-light 0%, $white 100%);
+  position: relative;
+  overflow: hidden;
+
+  // Iconos de fondo decorativos
+  .bg-icon {
+    position: absolute;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+
+    &.i1 {
+      width: 200px;
+      top: 10%;
+      left: 5%;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    &.i2 {
+      width: 180px;
+      top: 60%;
+      right: 8%;
+      animation: float 8s ease-in-out infinite 1s;
+    }
+
+    &.i3 {
+      width: 220px;
+      bottom: 10%;
+      left: 50%;
+      animation: float 7s ease-in-out infinite 2s;
+    }
+  }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 260px;
+    position: relative;
+    z-index: 1;
+
+    @media (max-width: 768px) {
+      margin-left: 0;
+    }
+  }
+}
+
+// ================================
+// CONTENIDO PRINCIPAL
+// ================================
+.content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+// ================================
+// CONTENEDOR DEL FORMULARIO
+// ================================
+.form-container {
+  background: $white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem;
+  animation: fadeIn 0.5s ease-in;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+}
+
+// ================================
+// ENCABEZADO DEL FORMULARIO
+// ================================
+.form-header {
+  margin-bottom: 2rem;
+  text-align: center;
+
+  .btn-back {
+    float: left;
+    background: transparent;
+    border: 1px solid $turquesa-primary;
+    color: $turquesa-primary;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: $turquesa-primary;
+      color: $white;
+      transform: translateX(-3px);
+    }
+
+    @media (max-width: 768px) {
+      float: none;
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  }
+
+  h1 {
+    color: $text-primary;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
+  }
+
+  .subtitle {
+    color: $text-secondary;
+    font-size: 1rem;
+
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// ================================
+// FORMULARIO
+// ================================
+.cita-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+
+    &.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: $text-primary;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+
+      .required {
+        color: $error-color;
+        margin-left: 0.25rem;
+      }
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 0.75rem;
+      border: 2px solid $gray-medium;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: $white;
+      color: $text-primary;
+
+      &:focus {
+        outline: none;
+        border-color: $turquesa-primary;
+        box-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
+      }
+
+      &:disabled {
+        background: $gray-light;
+        cursor: not-allowed;
+        color: $gray-dark;
+      }
+
+      &.error {
+        border-color: $error-color;
+
+        &:focus {
+          box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .error-message {
+      color: $error-color;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      &::before {
+        content: "⚠";
+      }
+    }
+
+    .field-hint {
+      color: $text-secondary;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      font-style: italic;
+    }
+
+    .textarea-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.25rem;
+      gap: 1rem;
+
+      .char-count {
+        color: $text-secondary;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+// ================================
+// BOTONES DE ACCIÓN
+// ================================
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+  }
+
+  button {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+
+    @media (max-width: 768px) {
+      min-width: 100%;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-cancel {
+    background: transparent;
+    border: 2px solid $gray-medium;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      background: $gray-light;
+      border-color: $gray-dark;
+    }
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, $turquesa-primary 0%, $turquesa-dark 100%);
+    color: $white;
+    box-shadow: 0 4px 12px rgba(77, 208, 225, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(77, 208, 225, 0.4);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .spinner-small {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: $white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+// ================================
+// FOOTER
+// ================================
+.footer {
+  background: $white;
+  border-top: 1px solid $gray-medium;
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: auto;
+
+  p {
+    color: $text-secondary;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+// ================================
+// LOADING
+// ================================
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1rem;
+
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid $gray-light;
+    border-top-color: $turquesa-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 1rem;
+  }
+}
+
+// ================================
+// ANIMACIONES
+// ================================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

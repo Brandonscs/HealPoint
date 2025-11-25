@@ -18,7 +18,7 @@ $shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 $transition: all 0.3s ease;
 
 /* ========================================
-   ROOT LAYOUT (Similar al Dashboard)
+   ROOT LAYOUT
    ======================================== */
 .disponibilidad-root {
   min-height: 100vh;
@@ -31,7 +31,7 @@ $transition: all 0.3s ease;
 }
 
 /* ========================================
-   ÍCONOS DE FONDO TRANSLÚCIDOS
+   ÍCONOS DE FONDO
    ======================================== */
 .bg-icon {
   position: absolute;
@@ -69,7 +69,7 @@ $transition: all 0.3s ease;
 }
 
 /* ========================================
-   MAIN AREA (navbar + content)
+   MAIN AREA
    ======================================== */
 .main-area {
   margin-left: 240px;
@@ -140,16 +140,21 @@ $transition: all 0.3s ease;
     }
 
     .subtitle {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #666;
       margin: 0 0 12px;
       font-weight: 500;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: inline-block;
+      border-left: 4px solid #ff9800;
     }
 
     .medico-info {
       font-size: 0.95rem;
       color: #555;
-      margin: 0;
+      margin: 12px 0 0;
       padding: 10px 16px;
       background: $light-bg;
       border-radius: 8px;
@@ -190,11 +195,7 @@ $transition: all 0.3s ease;
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0, 180, 198, 0.4);
-      background: linear-gradient(
-        135deg,
-        $primary-dark 0%,
-        #008a99 100%
-      );
+      background: linear-gradient(135deg, $primary-dark 0%, #008a99 100%);
     }
 
     &:active {
@@ -258,11 +259,11 @@ $transition: all 0.3s ease;
 }
 
 /* ========================================
-   CALENDARIO DE DISPONIBILIDAD
+   CALENDARIO - TARJETAS COMPACTAS
    ======================================== */
 .disponibilidad-calendar {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
@@ -272,10 +273,11 @@ $transition: all 0.3s ease;
   border-radius: 12px;
   overflow: hidden;
   transition: $transition;
+  min-height: 180px;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: $shadow-md;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
     border-color: $primary-color;
   }
 }
@@ -283,25 +285,28 @@ $transition: all 0.3s ease;
 .dia-header {
   background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
   color: white;
-  padding: 16px;
+  padding: 16px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 
   h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     text-transform: capitalize;
+    line-height: 1.3;
   }
 
   .count-badge {
     background: rgba(255, 255, 255, 0.3);
     padding: 4px 12px;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     backdrop-filter: blur(10px);
+    min-width: 26px;
+    text-align: center;
   }
 }
 
@@ -313,151 +318,122 @@ $transition: all 0.3s ease;
   gap: 10px;
 }
 
+/* ========================================
+   ITEM DE HORARIO - DISEÑO COMPACTO
+   ======================================== */
 .horario-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 12px 14px;
   background: white;
-  border: 1px solid $border-color;
-  border-radius: 10px;
+  border: 1.5px solid $border-color;
+  border-radius: 8px;
   transition: $transition;
   gap: 12px;
 
   &:hover {
     background: $light-bg;
     border-color: $primary-color;
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(0, 180, 198, 0.15);
+    box-shadow: 0 2px 6px rgba(0, 180, 198, 0.12);
   }
 
   .horario-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-weight: 600;
     color: $dark-color;
-    font-size: 15px;
+    font-size: 14px;
     flex: 1;
 
     .hora-inicio,
     .hora-fin {
       font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-      font-size: 15px;
-      background: rgba(0, 180, 198, 0.08);
-      padding: 4px 10px;
+      font-size: 13px;
+      background: rgba(0, 180, 198, 0.1);
+      padding: 5px 10px;
       border-radius: 6px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      font-weight: 600;
     }
 
     .separador {
       color: $primary-color;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 15px;
+      margin: 0 2px;
     }
   }
 
   .horario-actions {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
   }
 }
 
-.btn-action {
-  width: 26px;
-  height: 26px;
+/* ========================================
+   BOTONES COMO ICONOS PUROS - SIN FONDOS GRANDES
+   ======================================== */
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
   border: none;
+  background: transparent;
   border-radius: 5px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: $transition;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 4px;
 
   svg {
-    width: 12px;
-    height: 12px;
-    position: relative;
-    z-index: 2;
-    transition: $transition;
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: currentColor;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: block;
+    transition: all 0.2s ease;
   }
 
   &.btn-editar {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     color: #1976d2;
-    border: 1px solid rgba(25, 118, 210, 0.2);
 
     &:hover {
-      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-      color: white;
-      transform: scale(1.08);
-      box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3);
-      border-color: #1976d2;
+      background: rgba(25, 118, 210, 0.1);
+      color: #1565c0;
+      transform: scale(1.1);
 
       svg {
         stroke-width: 2.5;
       }
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
   }
 
   &.btn-eliminar {
-    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
     color: #d32f2f;
-    border: 1px solid rgba(211, 47, 47, 0.2);
 
     &:hover {
-      background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
-      color: white;
-      transform: scale(1.08);
-      box-shadow: 0 3px 10px rgba(211, 47, 47, 0.3);
-      border-color: #d32f2f;
+      background: rgba(211, 47, 47, 0.1);
+      color: #c62828;
+      transform: scale(1.1);
 
       svg {
         stroke-width: 2.5;
       }
     }
-  }
 
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.no-horarios {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  color: #999;
-  text-align: center;
-
-  .icon {
-    font-size: 36px;
-    margin-bottom: 8px;
-    opacity: 0.5;
-  }
-
-  p {
-    margin: 0;
-    font-size: 14px;
-    font-style: italic;
+    &:active {
+      transform: scale(0.95);
+    }
   }
 }
 
@@ -485,9 +461,19 @@ $transition: all 0.3s ease;
   }
 
   p {
-    margin: 0;
+    margin: 0 0 8px 0;
     font-size: 1rem;
     color: #999;
+  }
+
+  .info-horario {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    padding: 10px 18px;
+    border-radius: 8px;
+    color: #e65100;
+    font-weight: 600;
+    border-left: 4px solid #ff9800;
+    margin-top: 12px;
   }
 }
 
@@ -627,6 +613,26 @@ $transition: all 0.3s ease;
    ======================================== */
 .modal-form {
   padding: 30px;
+
+  .info-box {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #1976d2;
+    border-left: 4px solid #1976d2;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #1565c0;
+    font-size: 13px;
+    font-weight: 600;
+
+    svg {
+      flex-shrink: 0;
+      stroke: #1976d2;
+    }
+  }
 
   .form-row {
     display: grid;
@@ -823,7 +829,7 @@ $transition: all 0.3s ease;
   }
 
   .disponibilidad-calendar {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 }
 
@@ -884,29 +890,39 @@ $transition: all 0.3s ease;
     }
 
     .subtitle {
-      font-size: 0.875rem;
+      font-size: 0.825rem;
     }
   }
 
   .horario-item {
+    padding: 12px;
+    gap: 10px;
+
     .horario-info {
       font-size: 13px;
+      gap: 8px;
 
       .hora-inicio,
       .hora-fin {
         font-size: 13px;
+        padding: 5px 10px;
       }
+
+      .separador {
+        font-size: 14px;
+      }
+    }
+
+    .horario-actions {
+      gap: 6px;
     }
   }
 
-  .btn-action {
-    width: 26px;  // Reducido de 32px
+  .btn-icon {
+    width: 26px;
     height: 26px;
-    border-radius: 5px;
-
-    svg {
-      width: 12px;
-      height: 12px;
-    }
+    min-width: 26px;
+    min-height: 26px;
+    padding: 3px;
   }
 }

@@ -636,6 +636,278 @@
 }
 
 // ========================================
+  // CALENDARIO
+  // ========================================
+  .calendario-wrapper {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .calendario-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+      gap: 15px;
+
+      .btn-mes {
+        padding: 10px 20px;
+        background: #0891b2;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #0e7490;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+        }
+      }
+
+      .mes-año {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0891b2;
+        margin: 0;
+        text-align: center;
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .btn-hoy {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+      }
+    }
+
+    .calendario-grid {
+      .calendario-dias-semana {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin-bottom: 8px;
+
+        .dia-semana {
+          text-align: center;
+          font-size: 13px;
+          font-weight: 700;
+          color: #0891b2;
+          padding: 12px 8px;
+          background: #f0f9ff;
+          border-radius: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+
+      .calendario-dias {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+
+        .calendario-dia {
+          min-height: 120px;
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 10px;
+          padding: 8px;
+          position: relative;
+          transition: all 0.3s ease;
+          cursor: pointer;
+
+          &:hover {
+            border-color: #0891b2;
+            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.15);
+            transform: translateY(-2px);
+          }
+
+          &.otro-mes {
+            background: #f9fafb;
+            opacity: 0.6;
+
+            .dia-numero {
+              color: #9ca3af;
+            }
+          }
+
+          &.hoy {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+
+            .dia-numero {
+              background: #10b981;
+              color: white;
+              font-weight: 700;
+            }
+          }
+
+          &.tiene-citas {
+            border-color: #0891b2;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          }
+
+          .dia-numero {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            background: #f3f4f6;
+            border-radius: 50%;
+            margin-bottom: 8px;
+          }
+
+          .citas-del-dia {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            .citas-count {
+              font-size: 11px;
+              font-weight: 600;
+              color: #0891b2;
+              text-align: center;
+              margin-bottom: 4px;
+              padding: 4px;
+              background: rgba(8, 145, 178, 0.1);
+              border-radius: 4px;
+            }
+
+            .cita-item {
+              background: white;
+              border-radius: 6px;
+              padding: 6px 8px;
+              font-size: 11px;
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              border-left: 3px solid transparent;
+
+              &:hover {
+                transform: translateX(3px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+              }
+
+              .cita-hora {
+                font-weight: 700;
+                color: #111827;
+              }
+
+              .cita-paciente {
+                color: #6b7280;
+                font-size: 10px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+
+              &.estado-programada {
+                background: #dbeafe;
+                border-left-color: #1e40af;
+
+                .cita-hora {
+                  color: #1e40af;
+                }
+              }
+
+              &.estado-confirmada {
+                background: #d1fae5;
+                border-left-color: #065f46;
+
+                .cita-hora {
+                  color: #065f46;
+                }
+              }
+
+              &.estado-en-curso {
+                background: #fef3c7;
+                border-left-color: #92400e;
+
+                .cita-hora {
+                  color: #92400e;
+                }
+              }
+
+              &.estado-completada {
+                background: #dcfce7;
+                border-left-color: #166534;
+
+                .cita-hora {
+                  color: #166534;
+                }
+              }
+
+              &.estado-cancelada {
+                background: #fee2e2;
+                border-left-color: #991b1b;
+
+                .cita-hora {
+                  color: #991b1b;
+                }
+              }
+
+              &.estado-no-asistio {
+                background: #f3f4f6;
+                border-left-color: #374151;
+
+                .cita-hora {
+                  color: #374151;
+                }
+              }
+
+              &.estado-default {
+                background: #e5e7eb;
+                border-left-color: #6b7280;
+
+                .cita-hora {
+                  color: #6b7280;
+                }
+              }
+            }
+
+            .mas-citas {
+              font-size: 10px;
+              font-weight: 600;
+              color: #6b7280;
+              text-align: center;
+              padding: 4px;
+              background: #f3f4f6;
+              border-radius: 4px;
+              margin-top: 2px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+// ========================================
 // MODALES
 // ========================================
 .modal-overlay {

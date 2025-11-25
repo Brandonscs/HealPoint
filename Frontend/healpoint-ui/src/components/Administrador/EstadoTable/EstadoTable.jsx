@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import usuarioService from "../../../services/usuarioService";
 import estadoService from "../../../services/estadoService";
 import Navbar from "../../Shared/Navbar/Navbar";
@@ -47,6 +48,13 @@ export default function EstadoTable() {
       } catch (error) {
         console.error("Error al cargar estados:", error);
         setErrorMsg("Error al cargar la lista de estados.");
+        
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo cargar la lista de estados",
+          confirmButtonColor: "#00b4c6",
+        });
       } finally {
         setLoading(false);
       }
@@ -56,9 +64,22 @@ export default function EstadoTable() {
   }, [navigate]);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem("usuario");
-    localStorage.removeItem("adminLogueado");
-    navigate("/login");
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "¿Está seguro de que desea salir?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#00b4c6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("adminLogueado");
+        navigate("/login");
+      }
+    });
   }, [navigate]);
 
   const handleCreate = () => {
@@ -80,12 +101,27 @@ export default function EstadoTable() {
     e.preventDefault();
 
     if (!formData.nombreEstado.trim() || !formData.descripcion.trim()) {
-      alert("Por favor complete todos los campos");
+      Swal.fire({
+        icon: "warning",
+        title: "Campos incompletos",
+        text: "Por favor complete todos los campos",
+        confirmButtonColor: "#00b4c6",
+      });
       return;
     }
 
     try {
       const idUsuario = admin.idUsuario;
+
+      // Mostrar loading
+      Swal.fire({
+        title: "Guardando...",
+        text: "Por favor espere",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
 
       if (editingEstado) {
         const data = {
@@ -104,24 +140,80 @@ export default function EstadoTable() {
       setEstados(estadosResponse.data);
 
       setShowModal(false);
+
+      // Éxito
+      Swal.fire({
+        icon: "success",
+        title: editingEstado ? "¡Estado actualizado!" : "¡Estado creado!",
+        text: `El estado "${formData.nombreEstado}" ha sido ${editingEstado ? "actualizado" : "creado"} exitosamente`,
+        confirmButtonColor: "#00b4c6",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
     } catch (error) {
       console.error("Error al guardar estado:", error);
-      alert("Error al guardar el estado. Verifique si el nombre ya existe.");
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al guardar",
+        text: error.response?.data?.message || "Error al guardar el estado. Verifique que el nombre no esté duplicado.",
+        confirmButtonColor: "#00b4c6",
+      });
     }
   };
 
   const handleDelete = async (estado) => {
-    if (!window.confirm(`¿Eliminar estado "${estado.nombreEstado}"?`)) return;
+    const result = await Swal.fire({
+      title: "¿Eliminar estado?",
+      html: `¿Está seguro de eliminar el estado <strong>"${estado.nombreEstado}"</strong>?<br><br><small>Esta acción no se puede deshacer.</small>`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const idUsuario = admin.idUsuario;
+
+      // Mostrar loading
+      Swal.fire({
+        title: "Eliminando...",
+        text: "Por favor espere",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
       await estadoService.eliminarEstado(estado.idEstado, idUsuario);
 
       const estadosResponse = await estadoService.getEstados();
       setEstados(estadosResponse.data);
+
+      // Éxito
+      Swal.fire({
+        icon: "success",
+        title: "¡Estado eliminado!",
+        text: `El estado "${estado.nombreEstado}" ha sido eliminado exitosamente`,
+        confirmButtonColor: "#00b4c6",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
     } catch (error) {
       console.error("Error al eliminar estado:", error);
-      alert("No se pudo eliminar el estado.");
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al eliminar",
+        text: error.response?.data?.message || "No se pudo eliminar el estado. Puede estar siendo usado en otros registros.",
+        confirmButtonColor: "#00b4c6",
+      });
     }
   };
 
@@ -213,12 +305,14 @@ export default function EstadoTable() {
                             <button
                               className="btn-action btn-edit"
                               onClick={() => handleEdit(estado)}
+                              title="Editar"
                             >
                               ✏️
                             </button>
                             <button
                               className="btn-action btn-delete"
                               onClick={() => handleDelete(estado)}
+                              title="Eliminar"
                             >
                               🗑️
                             </button>
@@ -248,6 +342,7 @@ export default function EstadoTable() {
                   onChange={(e) =>
                     setFormData({ ...formData, nombreEstado: e.target.value })
                   }
+                  placeholder="Ej: PENDIENTE"
                   required
                 />
               </div>
@@ -259,6 +354,7 @@ export default function EstadoTable() {
                   onChange={(e) =>
                     setFormData({ ...formData, descripcion: e.target.value })
                   }
+                  placeholder="Descripción del estado..."
                   rows="4"
                   required
                 />

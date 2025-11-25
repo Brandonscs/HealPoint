@@ -1,5 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import usuarioService from "../../../services/usuarioService";
 import monitoriaService from "../../../services/monitoriaService";
+import Navbar from "../../Shared/Navbar/Navbar";
+import Sidebar from "../../Shared/Sidebar/Sidebar";
 import "./MonitoriaTable.scss";
 
 export default function MonitoriaTable() {
@@ -51,6 +56,13 @@ export default function MonitoriaTable() {
       } catch (error) {
         console.error("Error al cargar datos:", error);
         setError("Error al cargar los datos. Por favor, intente nuevamente.");
+        
+        Swal.fire({
+          icon: "error",
+          title: "Error al cargar",
+          text: "No se pudieron cargar los datos iniciales",
+          confirmButtonColor: "#00b4c6",
+        });
       } finally {
         setLoading(false);
       }
@@ -81,8 +93,15 @@ export default function MonitoriaTable() {
       }
     } catch (err) {
       console.error("Error al cargar registros:", err);
-      setError("Error al cargar los registros de monitoría. Por favor, intente nuevamente.");
+      setError("Error al cargar los registros de monitoría.");
       setRegistros([]);
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los registros de monitoría",
+        confirmButtonColor: "#00b4c6",
+      });
     } finally {
       setLoading(false);
     }
@@ -92,9 +111,22 @@ export default function MonitoriaTable() {
   // LOGOUT
   // ========================================
   const handleLogout = useCallback(() => {
-    localStorage.removeItem("usuario");
-    localStorage.removeItem("adminLogueado");
-    navigate("/login");
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "¿Está seguro de que desea salir?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#00b4c6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("adminLogueado");
+        navigate("/login");
+      }
+    });
   }, [navigate]);
 
   // ========================================
@@ -118,6 +150,9 @@ export default function MonitoriaTable() {
       case "SELECT":
       case "CONSULTAR":
         return { icon: "🔵", color: "#1976d2", text: "Consultar" };
+      case "ACTIVATE":
+      case "ACTIVAR":
+        return { icon: "🟢", color: "#2e7d32", text: "Activar" };
       default:
         return { icon: "⚪", color: "#757575", text: accion };
     }
@@ -234,12 +269,31 @@ export default function MonitoriaTable() {
     setFechaDesde("");
     setFechaHasta("");
     setCurrentPage(1);
+
+    Swal.fire({
+      icon: "success",
+      title: "Filtros limpiados",
+      text: "Se han restablecido todos los filtros",
+      confirmButtonColor: "#00b4c6",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   };
 
   // ========================================
-  // EXPORTAR DATOS (Opcional)
+  // EXPORTAR DATOS
   // ========================================
   const exportarCSV = () => {
+    if (registrosFiltrados.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sin datos",
+        text: "No hay registros para exportar",
+        confirmButtonColor: "#00b4c6",
+      });
+      return;
+    }
+
     const headers = ["ID", "Tabla", "Acción", "Fecha", "Usuario", "Descripción"];
     const rows = registrosFiltrados.map(r => [
       r.idMonitoria || "",
@@ -260,6 +314,15 @@ export default function MonitoriaTable() {
     link.href = URL.createObjectURL(blob);
     link.download = `monitoria_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
+
+    Swal.fire({
+      icon: "success",
+      title: "¡Exportado!",
+      text: `Se han exportado ${registrosFiltrados.length} registros`,
+      confirmButtonColor: "#00b4c6",
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
   // ========================================
@@ -329,7 +392,7 @@ export default function MonitoriaTable() {
                     <option value="INSERT">🟢 Crear (INSERT)</option>
                     <option value="UPDATE">🟡 Actualizar (UPDATE)</option>
                     <option value="DELETE">🔴 Eliminar (DELETE)</option>
-                    <option value="SELECT">🔵 Consultar (SELECT)</option>
+                    <option value="ACTIVATE">🟢 Activar (ACTIVATE)</option>
                   </select>
 
                   <input
@@ -382,7 +445,7 @@ export default function MonitoriaTable() {
                   <span className="stat-icon">🟢</span>
                   <div className="stat-info">
                     <span className="stat-value">
-                      {registrosFiltrados.filter(r => r.accion?.toUpperCase() === "INSERT").length}
+                      {registrosFiltrados.filter(r => r.accion?.toUpperCase() === "INSERT" || r.accion?.toUpperCase() === "CREATE").length}
                     </span>
                     <span className="stat-label">Creaciones</span>
                   </div>
@@ -544,7 +607,7 @@ export default function MonitoriaTable() {
 
                   <span className="pagination-info">
                     Mostrando {startIndex + 1}-{Math.min(endIndex, registrosFiltrados.length)} de{" "}
-                    {registrosFiltrados.length} registros de monitoría
+                    {registrosFiltrados.length} registros
                   </span>
                 </div>
               )}

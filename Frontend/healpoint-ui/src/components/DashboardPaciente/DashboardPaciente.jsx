@@ -40,6 +40,11 @@ export default function DashboardPaciente() {
           usuarioLocal.idUsuario
         );
 
+        // Verificar si la respuesta es un objeto o un mensaje de error
+        if (typeof respPaciente.data === 'string') {
+          throw new Error(respPaciente.data);
+        }
+
         const pacienteReal = respPaciente.data;
 
         // 3️⃣ Guardar paciente con toda su información
@@ -47,15 +52,29 @@ export default function DashboardPaciente() {
         localStorage.setItem("pacienteLogueado", JSON.stringify(pacienteReal));
       } catch (error) {
         console.error("Error al cargar datos:", error);
-        setErrorMsg(
-          "Error al cargar los datos del paciente. Por favor, intente nuevamente."
-        );
+        
+        // Mensaje de error más específico
+        let mensajeError = "Error al cargar los datos del paciente.";
+        
+        if (error.response) {
+          // El servidor respondió con un código de error
+          if (typeof error.response.data === 'string') {
+            mensajeError = error.response.data;
+          } else if (error.response.data?.message) {
+            mensajeError = error.response.data.message;
+          }
+        } else if (error.message) {
+          mensajeError = error.message;
+        }
+
+        setErrorMsg(mensajeError);
 
         Swal.fire({
           icon: "error",
           title: "Error al cargar datos",
-          text: "No se pudieron cargar los datos del paciente.",
+          text: mensajeError,
           confirmButtonColor: "#d33",
+          footer: '<a href="/login">¿Necesitas volver a iniciar sesión?</a>'
         });
       } finally {
         setLoading(false);
@@ -108,9 +127,14 @@ export default function DashboardPaciente() {
           <div className="error-icon">⚠️</div>
           <h2 className="error-title">Error</h2>
           <p className="error-message">{errorMsg}</p>
-          <button onClick={() => window.location.reload()} className="btn-retry">
-            Reintentar
-          </button>
+          <div className="error-actions">
+            <button onClick={() => window.location.reload()} className="btn-retry">
+              Reintentar
+            </button>
+            <button onClick={handleLogout} className="btn-logout">
+              Volver al Login
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -139,45 +163,84 @@ export default function DashboardPaciente() {
               Bienvenido, {usuario.nombre} {usuario.apellido}
             </h1>
             <p className="subtitle">
-              Gestione sus citas médicas y consulte su historial de forma rápida y segura.
+              Aquí puedes gestionar tus citas y ver tu historial médico.
             </p>
             <p className="user-info">
-              <strong>Rol:</strong> {usuario.rol?.nombreRol || "Paciente"}
+              <strong>Rol:</strong> {usuario.rol?.nombreRol || "Paciente"} | 
+              <strong> EPS:</strong> {paciente.eps || "No asignada"}
             </p>
           </section>
 
           <section className="cards-grid">
+            {/* Tarjeta: Agendar Cita */}
+            <article
+              className="card"
+              onClick={() => handleNavigate("/paciente/agendar")}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleNavigate("/paciente/agendar");
+              }}
+            >
+              <div className="card-icon">
+                <img src="../../../public/cita-paciente.png" alt="Agendar Cita" />
+              </div>
+              <h3>Agendar Cita</h3>
+              <p>Solicita una nueva cita médica según disponibilidad.</p>
+            </article>
+
+            {/* Tarjeta: Mis Citas */}
             <article
               className="card"
               onClick={() => handleNavigate("/paciente/citas")}
               role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleNavigate("/paciente/citas");
+              }}
             >
-              <img src="/icons/calendar.svg" alt="Mis Citas" />
+              <div className="card-icon">
+                <img src="../../../public/cita-medica.png" alt="Mis Citas" />
+              </div>
               <h3>Mis Citas</h3>
-              <p>Visualice y administre sus citas programadas.</p>
+              <p>Consulta tus citas pendientes o completadas.</p>
             </article>
 
+            {/* Tarjeta: Historial Médico */}
             <article
               className="card"
               onClick={() => handleNavigate("/paciente/historial")}
               role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleNavigate("/paciente/historial");
+              }}
             >
-              <img src="/icons/file-medical.svg" alt="Historial" />
+              <div className="card-icon">
+                <img src="../../../public/informe-medico.png" alt="Historial Médico" />
+              </div>
               <h3>Historial Médico</h3>
-              <p>Consulte su historial de consultas y diagnósticos.</p>
+              <p>Revisa tus diagnósticos y tratamientos anteriores.</p>
             </article>
 
-            <article
-              className="card"
-              onClick={() => handleNavigate("/paciente/configuracion")}
+            {/* Tarjeta: Configuración */}
+            <article 
+              className="card card-configuracion card-empty"
               role="button"
+              tabIndex={0}
+              aria-disabled="true"
             >
-              <img src="/icons/gear.svg" alt="Configuración" />
+              <img src="../../../public/configuracion-de-la-nube.png" alt="Configuración" />
               <h3>Configuración</h3>
-              <p>Actualice su información personal y preferencias.</p>
+              <p>Preferencias y datos de la cuenta.</p>
+              <span className="badge-soon">Próximamente</span>
             </article>
           </section>
         </main>
+
+        <footer className="footer">
+          <p>© 2025 HealPoint – Todos los derechos reservados.</p>
+        </footer>
       </div>
     </div>
   );

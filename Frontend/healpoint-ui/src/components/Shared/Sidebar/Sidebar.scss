@@ -55,8 +55,16 @@
       justify-content: center;
       
       .label,
-      .active-indicator {
+      .active-indicator,
+      .lock-icon {
         display: none;
+      }
+
+      &.locked {
+        .icon {
+          filter: grayscale(100%);
+          opacity: 0.4;
+        }
       }
     }
 
@@ -215,6 +223,14 @@
     animation: blink 1.5s ease-in-out infinite;
   }
 
+  // ✅ NUEVO: Icono de candado
+  .lock-icon {
+    margin-left: auto;
+    font-size: 16px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    animation: lockPulse 2s ease-in-out infinite;
+  }
+
   &:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: translateX(5px);
@@ -240,12 +256,45 @@
     }
   }
 
+  // ✅ NUEVO: Estilos para botón bloqueado
+  &.locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: all; // Permitir hover pero no click
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateX(0);
+      cursor: not-allowed;
+
+      .icon {
+        transform: scale(1) rotate(0);
+        filter: grayscale(100%);
+      }
+
+      .lock-icon {
+        animation: shake 0.6s ease;
+      }
+    }
+
+    // Evitar que se active el estado activo
+    &.active {
+      background: transparent;
+      font-weight: 500;
+      box-shadow: none;
+
+      &::before {
+        display: none;
+      }
+    }
+  }
+
   &:focus {
     outline: 2px solid white;
     outline-offset: 2px;
   }
 
-  &:active {
+  &:active:not(.locked) {
     transform: translateX(3px);
   }
 }
@@ -352,6 +401,25 @@
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+// ✅ NUEVO: Animación del candado al hacer hover
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-8deg); }
+  20%, 40%, 60%, 80% { transform: rotate(8deg); }
+}
+
+// ✅ NUEVO: Pulso sutil del candado
+@keyframes lockPulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
 }
 
 /* ========================================

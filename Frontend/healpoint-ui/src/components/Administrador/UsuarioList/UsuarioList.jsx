@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import usuarioService from "../../../services/usuarioService";
 import rolService from "../../../services/rolService";
 import estadoService from "../../../services/estadoService";
@@ -40,9 +41,10 @@ export default function UsuarioList() {
     telefono: "",
     fechaNacimiento: "",
     idRol: "",
-    idEstado: "1",
+    idEstado: "2", // ACTIVA por defecto
     contrasena: "",
-    confirmarContrasena: ""
+    confirmarContrasena: "",
+    contrasenaOriginal: ""
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -51,9 +53,9 @@ export default function UsuarioList() {
   const [roles, setRoles] = useState([]);
   const [estados, setEstados] = useState([]);
 
-  // Estados de confirmación
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null);
+  // Estados de confirmación - Ya no se necesitan
+  // const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // const [confirmAction, setConfirmAction] = useState(null);
 
   // ========================================
   // CARGAR DATOS INICIALES
@@ -220,6 +222,16 @@ export default function UsuarioList() {
       if (formData.contrasena !== formData.confirmarContrasena) {
         errors.confirmarContrasena = "Las contraseñas no coinciden";
       }
+    } else {
+      // En modo edición, solo validar si se ingresó una contraseña nueva
+      if (formData.contrasena) {
+        if (formData.contrasena.length < 6) {
+          errors.contrasena = "La contraseña debe tener al menos 6 caracteres";
+        }
+        if (formData.contrasena !== formData.confirmarContrasena) {
+          errors.confirmarContrasena = "Las contraseñas no coinciden";
+        }
+      }
     }
 
     setFormErrors(errors);
@@ -240,9 +252,10 @@ export default function UsuarioList() {
       telefono: "",
       fechaNacimiento: "",
       idRol: "",
-      idEstado: "1",
+      idEstado: "2", // ACTIVA por defecto
       contrasena: "",
-      confirmarContrasena: ""
+      confirmarContrasena: "",
+      contrasenaOriginal: ""
     });
     setFormErrors({});
     setShowModal(true);
@@ -259,9 +272,10 @@ export default function UsuarioList() {
       telefono: usuario.telefono,
       fechaNacimiento: usuario.fechaNacimiento || "",
       idRol: usuario.rol?.idRol || "",
-      idEstado: usuario.estado?.idEstado || "1",
+      idEstado: usuario.estado?.idEstado || "2",
       contrasena: "",
-      confirmarContrasena: ""
+      confirmarContrasena: "",
+      contrasenaOriginal: usuario.contrasena || ""
     });
     setFormErrors({});
     setShowModal(true);
@@ -278,9 +292,10 @@ export default function UsuarioList() {
       telefono: "",
       fechaNacimiento: "",
       idRol: "",
-      idEstado: "1",
+      idEstado: "2",
       contrasena: "",
-      confirmarContrasena: ""
+      confirmarContrasena: "",
+      contrasenaOriginal: ""
     });
     setFormErrors({});
   };
@@ -314,15 +329,37 @@ export default function UsuarioList() {
         payload.contrasena = formData.contrasena;
         await usuarioService.crearUsuario(payload, idUsuarioEditor);
         setError("");
-        alert("Usuario creado exitosamente");
+        
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Usuario creado!',
+          text: 'El usuario ha sido creado exitosamente',
+          confirmButtonColor: '#00b4c6',
+          timer: 2000,
+          showConfirmButton: true
+        });
       } else {
         payload.idUsuario = selectedUsuario.idUsuario;
-        if (formData.contrasena) {
+        
+        // Si el usuario ingresó una nueva contraseña, usarla
+        // Si no, enviar la contraseña original para que el backend la mantenga
+        if (formData.contrasena && formData.contrasena.trim() !== "") {
           payload.contrasena = formData.contrasena;
+        } else {
+          payload.contrasena = formData.contrasenaOriginal;
         }
+        
         await usuarioService.actualizarUsuario(payload, idUsuarioEditor);
         setError("");
-        alert("Usuario actualizado exitosamente");
+        
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Usuario actualizado!',
+          text: 'Los cambios han sido guardados exitosamente',
+          confirmButtonColor: '#00b4c6',
+          timer: 2000,
+          showConfirmButton: true
+        });
       }
 
       await cargarUsuarios();
@@ -330,7 +367,19 @@ export default function UsuarioList() {
     } catch (err) {
       console.error("Error al guardar usuario:", err);
       console.error("Respuesta del servidor:", err.response?.data);
-      setError(err.response?.data || "Error al guardar el usuario. Verifique los datos.");
+      
+      const errorMessage = typeof err.response?.data === 'string' 
+        ? err.response.data 
+        : err.response?.data?.message || "Error al guardar el usuario. Verifique los datos.";
+      
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: errorMessage,
+        confirmButtonColor: '#d32f2f'
+      });
+      
+      setError(errorMessage);
     }
   };
 
@@ -338,34 +387,82 @@ export default function UsuarioList() {
     try {
       const idUsuarioEditor = admin.idUsuario;
       
-      if (usuario.estado?.idEstado === 1) {
-        await usuarioService.eliminarUsuario(usuario.idUsuario, idUsuarioEditor);
-      } else {
-        await usuarioService.activarUsuario(usuario.idUsuario, idUsuarioEditor);
-      }
+      // Determinar el nuevo estado y el mensaje
+      const esActivo = usuario.estado?.idEstado === 2;
+      const nuevoEstado = esActivo ? 7 : 2;
+      const accion = esActivo ? 'desactivar' : 'activar';
+      
+      // Confirmar con SweetAlert
+      const result = await Swal.fire({
+        title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} usuario?`,
+        text: `¿Está seguro de que desea ${accion} a ${usuario.nombre} ${usuario.apellido}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00b4c6',
+        cancelButtonColor: '#d32f2f',
+        confirmButtonText: `Sí, ${accion}`,
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!result.isConfirmed) return;
+
+      // Mostrar loading
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Cambiando estado del usuario',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      const payload = {
+        idUsuario: usuario.idUsuario,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        correo: usuario.correo,
+        direccion: usuario.direccion,
+        telefono: usuario.telefono,
+        fechaNacimiento: usuario.fechaNacimiento,
+        contrasena: usuario.contrasena,
+        rol: {
+          idRol: usuario.rol?.idRol
+        },
+        estado: {
+          idEstado: nuevoEstado
+        }
+      };
+      
+      await usuarioService.actualizarUsuario(payload, idUsuarioEditor);
       await cargarUsuarios();
+      setError("");
+      
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Estado actualizado!',
+        text: `El usuario ha sido ${esActivo ? 'desactivado' : 'activado'} exitosamente`,
+        confirmButtonColor: '#00b4c6',
+        timer: 2000,
+        showConfirmButton: true
+      });
     } catch (err) {
       console.error("Error al cambiar estado:", err);
+      console.error("Detalles del error:", err.response?.data);
+      
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cambiar el estado del usuario',
+        confirmButtonColor: '#d32f2f'
+      });
+      
       setError("Error al cambiar el estado del usuario.");
     }
   };
 
-  const confirmarEliminar = (usuario) => {
-    setConfirmAction(() => () => eliminarUsuario(usuario.idUsuario));
-    setShowConfirmModal(true);
-  };
+  
 
-  const eliminarUsuario = async (idUsuario) => {
-    try {
-      const idUsuarioEditor = admin.idUsuario;
-      await usuarioService.eliminarUsuario(idUsuario, idUsuarioEditor);
-      await cargarUsuarios();
-      setShowConfirmModal(false);
-    } catch (err) {
-      console.error("Error al eliminar usuario:", err);
-      setError("Error al eliminar el usuario.");
-    }
-  };
+  
 
   // ========================================
   // RENDER
@@ -471,7 +568,7 @@ export default function UsuarioList() {
                           <td>
                             <span
                               className={`badge ${
-                                usuario.estado?.idEstado === 1
+                                usuario.estado?.idEstado === 2
                                   ? "badge-activo"
                                   : "badge-inactivo"
                               }`}
@@ -491,17 +588,11 @@ export default function UsuarioList() {
                               <button
                                 className="btn-action btn-estado"
                                 onClick={() => cambiarEstado(usuario)}
-                                title="Cambiar estado"
+                                title={usuario.estado?.idEstado === 2 ? "Desactivar" : "Activar"}
                               >
-                                {usuario.estado?.idEstado === 1 ? "🔓" : "🔒"}
+                                {usuario.estado?.idEstado === 2 ? "🔓" : "🔒"}
                               </button>
-                              <button
-                                className="btn-action btn-eliminar"
-                                onClick={() => confirmarEliminar(usuario)}
-                                title="Eliminar"
-                              >
-                                🗑️
-                              </button>
+                              
                             </div>
                           </td>
                         </tr>
@@ -754,31 +845,6 @@ export default function UsuarioList() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE CONFIRMACIÓN */}
-      {showConfirmModal && (
-        <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
-          <div className="modal-content modal-confirm" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon">⚠️</div>
-            <h2>¿Está seguro?</h2>
-            <p>Esta acción no se puede deshacer.</p>
-            <div className="modal-actions">
-              <button
-                className="btn-cancelar"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn-confirmar"
-                onClick={confirmAction}
-              >
-                Confirmar
-              </button>
-            </div>
           </div>
         </div>
       )}

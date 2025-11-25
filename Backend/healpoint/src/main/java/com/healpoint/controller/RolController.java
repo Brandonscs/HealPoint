@@ -160,7 +160,8 @@ public class RolController {
                     .body("No existe un rol con ID " + id);
         }
 
-        Estado inactivo = estadoRepository.findById(2).orElse(null);
+        // CORREGIDO: El estado Inactivo tiene ID 7, no 2
+        Estado inactivo = estadoRepository.findById(7).orElse(null);
 
         if (inactivo == null) {
             return ResponseEntity.badRequest().body("No se encontró el estado 'Inactivo'.");
@@ -194,7 +195,8 @@ public class RolController {
                     .body("No existe un rol con ID " + id);
         }
 
-        Estado activo = estadoRepository.findById(1).orElse(null);
+        // CORREGIDO: El estado ACTIVA tiene ID 2, no 1
+        Estado activo = estadoRepository.findById(2).orElse(null);
 
         if (activo == null) {
             return ResponseEntity.badRequest().body("No se encontró el estado 'Activo'.");

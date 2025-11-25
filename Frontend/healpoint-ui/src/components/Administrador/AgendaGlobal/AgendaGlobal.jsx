@@ -36,6 +36,9 @@ export default function AgendaGlobal() {
   // Vista
   const [vistaActual, setVistaActual] = useState("tabla");
 
+  // Calendario
+  const [mesActual, setMesActual] = useState(new Date());
+
   // Modales
   const [showModalDetalles, setShowModalDetalles] = useState(false);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
@@ -93,7 +96,7 @@ export default function AgendaGlobal() {
       }
     } catch (err) {
       console.error("Error al cargar datos:", err);
-      setError("Error al cargar los datos de la agenda. Por favor, intente nuevamente.");
+      setError("Error al cargar los datos de la agenda.");
 
       Swal.fire({
         icon: "error",
@@ -158,6 +161,75 @@ export default function AgendaGlobal() {
     setFiltroFechaInicio("");
     setFiltroFechaFin("");
     setPaginaActual(1);
+  };
+
+  // ========================================
+  // FUNCIONES DEL CALENDARIO
+  // ========================================
+  const obtenerDiasDelMes = (fecha) => {
+    const año = fecha.getFullYear();
+    const mes = fecha.getMonth();
+    
+    const primerDia = new Date(año, mes, 1);
+    const ultimoDia = new Date(año, mes + 1, 0);
+    
+    const diasAnteriores = primerDia.getDay();
+    const diasDelMes = ultimoDia.getDate();
+    
+    const dias = [];
+    
+    // Días del mes anterior
+    const ultimoDiaMesAnterior = new Date(año, mes, 0).getDate();
+    for (let i = diasAnteriores - 1; i >= 0; i--) {
+      dias.push({
+        dia: ultimoDiaMesAnterior - i,
+        esMesActual: false,
+        fecha: new Date(año, mes - 1, ultimoDiaMesAnterior - i)
+      });
+    }
+    
+    // Días del mes actual
+    for (let i = 1; i <= diasDelMes; i++) {
+      dias.push({
+        dia: i,
+        esMesActual: true,
+        fecha: new Date(año, mes, i)
+      });
+    }
+    
+    // Días del siguiente mes
+    const diasRestantes = 42 - dias.length; // 6 semanas * 7 días
+    for (let i = 1; i <= diasRestantes; i++) {
+      dias.push({
+        dia: i,
+        esMesActual: false,
+        fecha: new Date(año, mes + 1, i)
+      });
+    }
+    
+    return dias;
+  };
+
+  const obtenerCitasDelDia = (fecha) => {
+    const fechaStr = fecha.toISOString().split('T')[0];
+    return citasFiltradas.filter(cita => cita.fecha === fechaStr);
+  };
+
+  const cambiarMes = (direccion) => {
+    setMesActual(prev => {
+      const nuevoMes = new Date(prev);
+      nuevoMes.setMonth(prev.getMonth() + direccion);
+      return nuevoMes;
+    });
+  };
+
+  const irHoy = () => {
+    setMesActual(new Date());
+  };
+
+  const esHoy = (fecha) => {
+    const hoy = new Date();
+    return fecha.toDateString() === hoy.toDateString();
   };
 
   // Paginación
@@ -226,9 +298,7 @@ export default function AgendaGlobal() {
       await citaService.actualizarCita(idCita, citaActualizada);
 
       setSuccess("Estado de la cita actualizado exitosamente");
-
       await cargarDatosIniciales();
-
       cerrarModalEstado();
 
       Swal.fire({
@@ -362,6 +432,13 @@ export default function AgendaGlobal() {
 
   const stats = calcularEstadisticas();
 
+  const meses = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+
+  const diasSemana = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
   // Render - Loading
   if (loading) {
     return (
@@ -375,22 +452,6 @@ export default function AgendaGlobal() {
               <p className="loading-text">Cargando agenda global...</p>
             </div>
           </main>
-        </div>
-      </div>
-    );
-  }
-
-  // Render - Error
-  if (error && !admin) {
-    return (
-      <div className="dashboard-admin-root">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <h2 className="error-title">Error</h2>
-          <p className="error-message">{error}</p>
-          <button onClick={() => navigate("/login")} className="btn-retry">
-            Ir al Login
-          </button>
         </div>
       </div>
     );
@@ -427,8 +488,6 @@ export default function AgendaGlobal() {
                 <button
                   className={`btn-vista ${vistaActual === "calendario" ? "active" : ""}`}
                   onClick={() => setVistaActual("calendario")}
-                  title="Próximamente"
-                  disabled
                 >
                   📅 Calendario
                 </button>
@@ -551,132 +610,204 @@ export default function AgendaGlobal() {
               </div>
             </div>
 
+            {/* VISTA TABLA */}
             {vistaActual === "tabla" && (
-              <div className="tabla-wrapper">
-                <table className="agenda-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Paciente</th>
-                      <th>Médico</th>
-                      <th>Fecha</th>
-                      <th>Hora</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {citasPaginadas.length > 0 ? (
-                      citasPaginadas.map((cita) => (
-                        <tr key={cita.idCita || cita.id_cita}>
-                          <td>{cita.idCita || cita.id_cita}</td>
-                          <td>
-                            <div className="paciente-cell">
-                              <strong>
-                                {cita.paciente?.usuario?.nombre} {cita.paciente?.usuario?.apellido}
-                              </strong>
-                              <span className="documento">
-                                {cita.paciente?.usuario?.numeroDocumento}
+              <>
+                <div className="tabla-wrapper">
+                  <table className="agenda-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Paciente</th>
+                        <th>Médico</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {citasPaginadas.length > 0 ? (
+                        citasPaginadas.map((cita) => (
+                          <tr key={cita.idCita || cita.id_cita}>
+                            <td>{cita.idCita || cita.id_cita}</td>
+                            <td>
+                              <div className="paciente-cell">
+                                <strong>
+                                  {cita.paciente?.usuario?.nombre} {cita.paciente?.usuario?.apellido}
+                                </strong>
+                                <span className="documento">
+                                  {cita.paciente?.usuario?.numeroDocumento}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="medico-cell">
+                                <strong>
+                                  Dr. {cita.medico?.usuario?.nombre} {cita.medico?.usuario?.apellido}
+                                </strong>
+                                <span className="especialidad">{cita.medico?.especialidad}</span>
+                              </div>
+                            </td>
+                            <td>{formatearFecha(cita.fecha)}</td>
+                            <td>{formatearHora(cita.hora)}</td>
+                            <td>
+                              <span className={`estado-badge ${obtenerColorEstado(cita.estado)}`}>
+                                {obtenerTextoEstado(cita.estado)}
                               </span>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="medico-cell">
-                              <strong>
-                                Dr. {cita.medico?.usuario?.nombre} {cita.medico?.usuario?.apellido}
-                              </strong>
-                              <span className="especialidad">{cita.medico?.especialidad}</span>
-                            </div>
-                          </td>
-                          <td>{formatearFecha(cita.fecha)}</td>
-                          <td>{formatearHora(cita.hora)}</td>
-                          <td>
-                            <span className={`estado-badge ${obtenerColorEstado(cita.estado)}`}>
-                              {obtenerTextoEstado(cita.estado)}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="action-buttons">
-                              <button
-                                className="btn-action btn-ver"
-                                onClick={() => abrirModalDetalles(cita)}
-                                title="Ver detalles"
-                              >
-                                👁️
-                              </button>
-                              {cita.estado?.nombreEstado !== "COMPLETADA" &&
-                                cita.estado?.nombreEstado !== "CANCELADA" && (
-                                  <>
-                                    <button
-                                      className="btn-action btn-editar"
-                                      onClick={() => abrirModalEstado(cita)}
-                                      title="Cambiar estado"
-                                    >
-                                      ✏️
-                                    </button>
-                                    <button
-                                      className="btn-action btn-cancelar"
-                                      onClick={() => cancelarCita(cita)}
-                                      title="Cancelar cita"
-                                    >
-                                      🗑️
-                                    </button>
-                                  </>
-                                )}
+                            </td>
+                            <td>
+                              <div className="action-buttons">
+                                <button
+                                  className="btn-action btn-ver"
+                                  onClick={() => abrirModalDetalles(cita)}
+                                  title="Ver detalles"
+                                >
+                                  👁️
+                                </button>
+                                {cita.estado?.nombreEstado !== "COMPLETADA" &&
+                                  cita.estado?.nombreEstado !== "CANCELADA" && (
+                                    <>
+                                      <button
+                                        className="btn-action btn-editar"
+                                        onClick={() => abrirModalEstado(cita)}
+                                        title="Cambiar estado"
+                                      >
+                                        ✏️
+                                      </button>
+                                      <button
+                                        className="btn-action btn-cancelar"
+                                        onClick={() => cancelarCita(cita)}
+                                        title="Cancelar cita"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </>
+                                  )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="no-data">
+                            <div className="no-citas">
+                              <div className="no-citas-icon">📋</div>
+                              <h3>No se encontraron citas</h3>
+                              <p>No hay citas que coincidan con los filtros seleccionados</p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="7" className="no-data">
-                          <div className="no-citas">
-                            <div className="no-citas-icon">📋</div>
-                            <h3>No se encontraron citas</h3>
-                            <p>No hay citas que coincidan con los filtros seleccionados</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {citasFiltradas.length > citasPorPagina && (
-              <div className="paginacion">
-                <button
-                  className="btn-paginacion"
-                  onClick={() => cambiarPagina(paginaActual - 1)}
-                  disabled={paginaActual === 1}
-                >
-                  ◀ Anterior
-                </button>
-
-                <div className="numeros-pagina">
-                  {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numero) => (
-                    <button
-                      key={numero}
-                      className={`btn-numero ${paginaActual === numero ? "active" : ""}`}
-                      onClick={() => cambiarPagina(numero)}
-                    >
-                      {numero}
-                    </button>
-                  ))}
+                      )}
+                    </tbody>
+                  </table>
                 </div>
 
-                <button
-                  className="btn-paginacion"
-                  onClick={() => cambiarPagina(paginaActual + 1)}
-                  disabled={paginaActual === totalPaginas}
-                >
-                  Siguiente ▶
-                </button>
+                {citasFiltradas.length > citasPorPagina && (
+                  <div className="paginacion">
+                    <button
+                      className="btn-paginacion"
+                      onClick={() => cambiarPagina(paginaActual - 1)}
+                      disabled={paginaActual === 1}
+                    >
+                      ◀ Anterior
+                    </button>
 
-                <span className="info-paginacion">
-                  Mostrando {indexPrimeraCita + 1} -{" "}
-                  {Math.min(indexUltimaCita, citasFiltradas.length)} de {citasFiltradas.length} citas
-                </span>
+                    <div className="numeros-pagina">
+                      {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numero) => (
+                        <button
+                          key={numero}
+                          className={`btn-numero ${paginaActual === numero ? "active" : ""}`}
+                          onClick={() => cambiarPagina(numero)}
+                        >
+                          {numero}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      className="btn-paginacion"
+                      onClick={() => cambiarPagina(paginaActual + 1)}
+                      disabled={paginaActual === totalPaginas}
+                    >
+                      Siguiente ▶
+                    </button>
+
+                    <span className="info-paginacion">
+                      Mostrando {indexPrimeraCita + 1} -{" "}
+                      {Math.min(indexUltimaCita, citasFiltradas.length)} de {citasFiltradas.length} citas
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* VISTA CALENDARIO */}
+            {vistaActual === "calendario" && (
+              <div className="calendario-wrapper">
+                <div className="calendario-header">
+                  <button className="btn-mes" onClick={() => cambiarMes(-1)}>
+                    ◀ Anterior
+                  </button>
+                  <h2 className="mes-año">
+                    {meses[mesActual.getMonth()]} {mesActual.getFullYear()}
+                  </h2>
+                  <button className="btn-hoy" onClick={irHoy}>
+                    📅 Hoy
+                  </button>
+                  <button className="btn-mes" onClick={() => cambiarMes(1)}>
+                    Siguiente ▶
+                  </button>
+                </div>
+
+                <div className="calendario-grid">
+                  <div className="calendario-dias-semana">
+                    {diasSemana.map((dia) => (
+                      <div key={dia} className="dia-semana">{dia}</div>
+                    ))}
+                  </div>
+
+                  <div className="calendario-dias">
+                    {obtenerDiasDelMes(mesActual).map((diaInfo, index) => {
+                      const citasDelDia = obtenerCitasDelDia(diaInfo.fecha);
+                      const esHoyDia = esHoy(diaInfo.fecha);
+
+                      return (
+                        <div
+                          key={index}
+                          className={`calendario-dia ${!diaInfo.esMesActual ? 'otro-mes' : ''} ${esHoyDia ? 'hoy' : ''} ${citasDelDia.length > 0 ? 'tiene-citas' : ''}`}
+                        >
+                          <div className="dia-numero">{diaInfo.dia}</div>
+                          {citasDelDia.length > 0 && (
+                            <div className="citas-del-dia">
+                              <div className="citas-count">
+                                {citasDelDia.length} cita{citasDelDia.length !== 1 ? 's' : ''}
+                              </div>
+                              {citasDelDia.slice(0, 3).map((cita) => (
+                                <div
+                                  key={cita.idCita || cita.id_cita}
+                                  className={`cita-item ${obtenerColorEstado(cita.estado)}`}
+                                  onClick={() => abrirModalDetalles(cita)}
+                                  title={`${formatearHora(cita.hora)} - ${cita.paciente?.usuario?.nombre}`}
+                                >
+                                  <span className="cita-hora">{formatearHora(cita.hora)}</span>
+                                  <span className="cita-paciente">
+                                    {cita.paciente?.usuario?.nombre?.substring(0, 10)}
+                                  </span>
+                                </div>
+                              ))}
+                              {citasDelDia.length > 3 && (
+                                <div className="mas-citas">
+                                  +{citasDelDia.length - 3} más
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
           </div>

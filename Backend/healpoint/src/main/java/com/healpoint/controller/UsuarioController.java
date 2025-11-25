@@ -190,7 +190,7 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body("ID inválido.");
         }
 
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        Usuario usuario = usuarioRepository.findById(7).orElse(null);
 
         if (usuario == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -272,7 +272,7 @@ public class UsuarioController {
                     .body("Contraseña incorrecta.");
         }
 
-        if (usuario.getEstado().getIdEstado() != 1) {
+        if (usuario.getEstado().getIdEstado() != 2) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("El usuario está inactivo.");
         }

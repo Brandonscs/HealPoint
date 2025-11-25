@@ -10,36 +10,37 @@ export default function Sidebar({ usuario, onLogout }) {
   // Menús dinámicos por rol
   const menus = useMemo(() => ({
     Paciente: [
-      { icon: "🏠", label: "Inicio", path: "/dashboard-paciente" },
-      { icon: "📅", label: "Mis Citas", path: "/paciente/citas" },
-      { icon: "🩺", label: "Historial Médico", path: "/paciente/historial" },
-      { icon: "⚙️", label: "Configuración", path: "/paciente/configuracion" },
+      { icon: "🏠", label: "Inicio", path: "/dashboard-paciente", locked: false },
+      { icon: "📅", label: "Agendar Cita", path: "/paciente/agendar", locked: false },
+      { icon: "🕐", label: "Mis Citas", path: "/paciente/citas", locked: false },
+      { icon: "🩺", label: "Historial Médico", path: "/paciente/historial", locked: false },
+      { icon: "⚙️", label: "Configuración", path: "/paciente/configuracion", locked: true },
     ],
     Medico: [
-      { icon: "🏠", label: "Inicio", path: "/dashboard-medico" },
-      { icon: "🕒", label: "Mi Disponibilidad", path: "/medico/disponibilidad" },
-      { icon: "📋", label: "Mis Citas", path: "/medico/citas" },
-      { icon: "🩻", label: "Historiales Médicos", path: "/medico/historial" },
-      { icon: "⚙️", label: "Configuración", path: "/medico/configuracion" },
+      { icon: "🏠", label: "Inicio", path: "/dashboard-medico", locked: false },
+      { icon: "🕒", label: "Mi Disponibilidad", path: "/medico/disponibilidad", locked: false },
+      { icon: "📋", label: "Mis Citas", path: "/medico/citas", locked: false },
+      { icon: "🩻", label: "Historiales Médicos", path: "/medico/historial", locked: false },
+      { icon: "⚙️", label: "Configuración", path: "/medico/configuracion", locked: true },
     ],
     Administrador: [
-      { icon: "🏠", label: "Inicio", path: "/dashboard-admin" },
-      { icon: "👥", label: "Usuarios", path: "/admin/usuarios" },
-      { icon: "🧩", label: "Roles", path: "/admin/roles" },
-      { icon: "⚙️", label: "Estados", path: "/admin/estados" },
-      { icon: "📆", label: "Agenda Global", path: "/admin/agenda" },
-      { icon: "🕵️", label: "Monitoría", path: "/admin/monitoreo" },
+      { icon: "🏠", label: "Inicio", path: "/dashboard-admin", locked: false },
+      { icon: "👥", label: "Usuarios", path: "/admin/usuarios", locked: false },
+      { icon: "🧩", label: "Roles", path: "/admin/roles", locked: false },
+      { icon: "⚙️", label: "Estados", path: "/admin/estados", locked: false },
+      { icon: "📆", label: "Agenda Global", path: "/admin/agenda", locked: false },
+      { icon: "🕵️", label: "Monitoría", path: "/admin/monitoreo", locked: false },
     ],
   }), []);
 
   // Determinar rol del usuario
   const rol = useMemo(() => {
-    return usuario?.rol?.nombreRol || "Medico";
+    return usuario?.rol?.nombreRol || "Paciente";
   }, [usuario]);
 
   // Obtener menú según rol
   const sidebarMenu = useMemo(() => {
-    return menus[rol] || menus.Medico;
+    return menus[rol] || menus.Paciente;
   }, [menus, rol]);
 
   // Verificar si una ruta está activa
@@ -48,7 +49,11 @@ export default function Sidebar({ usuario, onLogout }) {
   };
 
   // Manejar navegación
-  const handleNavigate = (path) => {
+  const handleNavigate = (path, locked) => {
+    // Si está bloqueado, no hacer nada
+    if (locked) {
+      return;
+    }
     navigate(path);
   };
 
@@ -93,16 +98,20 @@ export default function Sidebar({ usuario, onLogout }) {
         {sidebarMenu.map((item, index) => (
           <button
             key={index}
-            className={`menu-item ${isActiveRoute(item.path) ? 'active' : ''}`}
-            onClick={() => handleNavigate(item.path)}
-            title={item.label}
+            className={`menu-item ${isActiveRoute(item.path) ? 'active' : ''} ${item.locked ? 'locked' : ''}`}
+            onClick={() => handleNavigate(item.path, item.locked)}
+            title={item.locked ? `${item.label} (Bloqueado)` : item.label}
             aria-label={item.label}
+            disabled={item.locked}
           >
             <span className="icon">{item.icon}</span>
             {!isCollapsed && (
               <>
                 <span className="label">{item.label}</span>
-                {isActiveRoute(item.path) && (
+                {item.locked && (
+                  <span className="lock-icon">🔒</span>
+                )}
+                {isActiveRoute(item.path) && !item.locked && (
                   <span className="active-indicator">●</span>
                 )}
               </>

@@ -39,6 +39,26 @@ export default function DisponibilidadForm() {
   const [disponibilidadAEliminar, setDisponibilidadAEliminar] = useState(null);
 
   // ========================================
+  // CONSTANTES PARA HORARIO DE OFICINA
+  // ========================================
+  const HORA_INICIO_OFICINA = "06:00";
+  const HORA_FIN_OFICINA = "20:00";
+  const DIAS_LABORALES = [1, 2, 3, 4, 5]; // Lunes a Viernes
+
+  // ========================================
+  // FUNCIONES DE VALIDACIÓN
+  // ========================================
+  const esDiaLaboral = (fechaString) => {
+    const fecha = new Date(fechaString + 'T00:00:00');
+    const diaSemana = fecha.getDay();
+    return DIAS_LABORALES.includes(diaSemana);
+  };
+
+  const estaEnHorarioOficina = (hora) => {
+    return hora >= HORA_INICIO_OFICINA && hora <= HORA_FIN_OFICINA;
+  };
+
+  // ========================================
   // CARGAR DATOS INICIALES
   // ========================================
   const cargarDisponibilidades = useCallback(async (idMedico) => {
@@ -168,14 +188,23 @@ export default function DisponibilidadForm() {
 
     if (!formData.fecha) {
       errors.fecha = "Debe seleccionar una fecha";
+    } else {
+      // Validar que sea día laboral (Lunes a Viernes)
+      if (!esDiaLaboral(formData.fecha)) {
+        errors.fecha = "Solo se pueden crear disponibilidades de lunes a viernes";
+      }
     }
 
     if (!formData.hora_inicio) {
       errors.hora_inicio = "Debe seleccionar una hora de inicio";
+    } else if (!estaEnHorarioOficina(formData.hora_inicio)) {
+      errors.hora_inicio = `La hora debe estar entre ${HORA_INICIO_OFICINA} y ${HORA_FIN_OFICINA}`;
     }
 
     if (!formData.hora_fin) {
       errors.hora_fin = "Debe seleccionar una hora de fin";
+    } else if (!estaEnHorarioOficina(formData.hora_fin)) {
+      errors.hora_fin = `La hora debe estar entre ${HORA_INICIO_OFICINA} y ${HORA_FIN_OFICINA}`;
     }
 
     if (formData.hora_inicio && formData.hora_fin) {
@@ -247,10 +276,8 @@ export default function DisponibilidadForm() {
     setModalMode("edit");
     setSelectedDisponibilidad(disponibilidad);
     
-    // ✅ Formatear las horas para el input type="time" (solo HH:mm)
     const formatearParaInput = (hora) => {
       if (!hora) return "";
-      // Si ya tiene formato HH:mm:ss, extraer solo HH:mm
       return hora.substring(0, 5);
     };
     
@@ -311,19 +338,14 @@ export default function DisponibilidadForm() {
       return;
     }
 
-    // ✅ CONSTRUIR EL PAYLOAD CORRECTAMENTE
-    // Función para asegurar formato HH:mm:ss
     const formatearHoraParaBackend = (hora) => {
       if (!hora) return "";
-      // Si ya tiene formato HH:mm:ss, retornarlo tal cual
       if (hora.length === 8 && hora.split(':').length === 3) {
         return hora;
       }
-      // Si tiene formato HH:mm, agregar :00
       if (hora.length === 5 && hora.split(':').length === 2) {
         return hora + ":00";
       }
-      // Por defecto, agregar :00
       return hora + ":00";
     };
 
@@ -336,7 +358,6 @@ export default function DisponibilidadForm() {
       hora_fin: formatearHoraParaBackend(formData.hora_fin),
     };
 
-    // ✅ SI ES EDICIÓN, AGREGAR EL ID DESDE EL INICIO
     if (modalMode === "edit") {
       payload.id_disponibilidad = selectedDisponibilidad.id_disponibilidad;
     }
@@ -465,7 +486,6 @@ export default function DisponibilidadForm() {
     return horaString.substring(0, 5);
   };
 
-  // Agrupar disponibilidades por fecha
   const disponibilidadesAgrupadas = disponibilidades.reduce((acc, disp) => {
     const fecha = disp.fecha;
     if (!acc[fecha]) {
@@ -530,7 +550,7 @@ export default function DisponibilidadForm() {
               <div className="header-content">
                 <h1 className="title">Gestión de Disponibilidad</h1>
                 <p className="subtitle">
-                  Configure sus horarios de atención por fecha
+                  Horario de oficina: Lunes a Viernes, 6:00 AM - 8:00 PM
                 </p>
                 {medicoLogueado && (
                   <p className="medico-info">
@@ -586,9 +606,10 @@ export default function DisponibilidadForm() {
                           </div>
                           <div className="horario-actions">
                             <button
-                              className="btn-action btn-editar"
+                              className="btn-icon btn-editar"
                               onClick={() => abrirModalEditar(disp)}
-                              title="Editar disponibilidad"
+                              title="Editar"
+                              aria-label="Editar disponibilidad"
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -596,9 +617,10 @@ export default function DisponibilidadForm() {
                               </svg>
                             </button>
                             <button
-                              className="btn-action btn-eliminar"
+                              className="btn-icon btn-eliminar"
                               onClick={() => confirmarEliminar(disp)}
-                              title="Eliminar disponibilidad"
+                              title="Eliminar"
+                              aria-label="Eliminar disponibilidad"
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -618,6 +640,7 @@ export default function DisponibilidadForm() {
                   <span className="icon">📅</span>
                   <h3>No hay disponibilidades registradas</h3>
                   <p>Agregue horarios de atención para sus pacientes</p>
+                  <p className="info-horario">Horario permitido: Lunes a Viernes, 6:00 AM - 8:00 PM</p>
                 </div>
               )}
             </div>
@@ -640,6 +663,15 @@ export default function DisponibilidadForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="modal-form">
+              <div className="info-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Solo días laborales (Lun-Vie) de 6:00 AM a 8:00 PM</span>
+              </div>
+
               <div className="form-group">
                 <label>Fecha *</label>
                 <input
@@ -664,6 +696,8 @@ export default function DisponibilidadForm() {
                     value={formData.hora_inicio}
                     onChange={handleInputChange}
                     className={formErrors.hora_inicio ? "error" : ""}
+                    min="06:00"
+                    max="20:00"
                   />
                   {formErrors.hora_inicio && (
                     <span className="error-message">{formErrors.hora_inicio}</span>
@@ -678,6 +712,8 @@ export default function DisponibilidadForm() {
                     value={formData.hora_fin}
                     onChange={handleInputChange}
                     className={formErrors.hora_fin ? "error" : ""}
+                    min="06:00"
+                    max="20:00"
                   />
                   {formErrors.hora_fin && (
                     <span className="error-message">{formErrors.hora_fin}</span>

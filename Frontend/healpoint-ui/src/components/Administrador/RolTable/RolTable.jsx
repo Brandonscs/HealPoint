@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import usuarioService from "../../../services/usuarioService";
 import rolService from "../../../services/rolService";
 import Navbar from "../../Shared/Navbar/Navbar";
@@ -53,6 +54,13 @@ export default function RolTable() {
       } catch (error) {
         console.error("Error al cargar roles:", error);
         setErrorMsg("Error al cargar la lista de roles.");
+        
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo cargar la lista de roles",
+          confirmButtonColor: "#00b4c6",
+        });
       } finally {
         setLoading(false);
       }
@@ -76,7 +84,7 @@ export default function RolTable() {
 
     // Filtro por estado
     if (filtroEstado !== "todos") {
-      const estadoBuscado = filtroEstado === "activo" ? "Activo" : "Inactivo";
+      const estadoBuscado = filtroEstado === "activo" ? "ACTIVA" : "Inactivo";
       rolesFiltrados = rolesFiltrados.filter(
         (rol) => rol.estado?.nombreEstado === estadoBuscado
       );
@@ -87,9 +95,22 @@ export default function RolTable() {
   }, [busqueda, filtroEstado, rolesOriginales]);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem("usuario");
-    localStorage.removeItem("adminLogueado");
-    navigate("/login");
+    Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "¿Está seguro de que desea salir?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#00b4c6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("adminLogueado");
+        navigate("/login");
+      }
+    });
   }, [navigate]);
 
   const handleCreate = () => {
@@ -111,12 +132,27 @@ export default function RolTable() {
     e.preventDefault();
     
     if (!formData.nombreRol.trim() || !formData.descripcion.trim()) {
-      alert("Por favor complete todos los campos");
+      Swal.fire({
+        icon: "warning",
+        title: "Campos incompletos",
+        text: "Por favor complete todos los campos",
+        confirmButtonColor: "#00b4c6",
+      });
       return;
     }
 
     try {
       const idUsuario = admin.idUsuario;
+
+      // Mostrar loading
+      Swal.fire({
+        title: "Guardando...",
+        text: "Por favor espere",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
 
       if (editingRol) {
         // Actualizar
@@ -128,14 +164,14 @@ export default function RolTable() {
         };
         await rolService.actualizarRol(dataActualizar, idUsuario);
       } else {
-        // Crear
+        // Crear - estado ACTIVA (id 2)
         await rolService.crearRol(
-        {
+          {
             nombreRol: formData.nombreRol,
             descripcion: formData.descripcion,
-            estado: { idEstado: 1}
-        },
-        idUsuario
+            estado: { idEstado: 2 }
+          },
+          idUsuario
         );
       }
       
@@ -144,54 +180,91 @@ export default function RolTable() {
       setRoles(rolesResponse.data);
       setRolesOriginales(rolesResponse.data);
       setShowModal(false);
+
+      // Éxito
+      Swal.fire({
+        icon: "success",
+        title: editingRol ? "¡Rol actualizado!" : "¡Rol creado!",
+        text: `El rol "${formData.nombreRol}" ha sido ${editingRol ? "actualizado" : "creado"} exitosamente`,
+        confirmButtonColor: "#00b4c6",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
     } catch (error) {
       console.error("Error al guardar rol:", error);
-      alert("Error al guardar el rol. Verifique que el nombre no esté duplicado.");
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al guardar",
+        text: error.response?.data?.message || "Error al guardar el rol. Verifique que el nombre no esté duplicado.",
+        confirmButtonColor: "#00b4c6",
+      });
     }
   };
 
   const handleToggleEstado = async (rol) => {
-  const accion = rol.estado?.nombreEstado === "Activo" ? "desactivar" : "activar";
-  
-  if (!window.confirm(`¿Está seguro de ${accion} el rol "${rol.nombreRol}"?`)) {
-    return;
-  }
+    const esActivo = rol.estado?.nombreEstado === "ACTIVA";
+    const accion = esActivo ? "desactivar" : "activar";
+    
+    const result = await Swal.fire({
+      title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} rol?`,
+      html: `¿Está seguro de ${accion} el rol <strong>"${rol.nombreRol}"</strong>?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: esActivo ? "#d33" : "#00b4c6",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}`,
+      cancelButtonText: "Cancelar",
+    });
 
-  try {
-    const idUsuario = admin.idUsuario;
-
-    if (rol.estado?.nombreEstado === "Activo") {
-      await rolService.eliminarRol(rol.idRol, idUsuario);
-    } else {
-      await rolService.activarRol(rol.idRol, idUsuario);
-    }
-
-    // Recargar roles
-    const rolesResponse = await rolService.getRoles();
-    setRoles(rolesResponse.data);
-    setRolesOriginales(rolesResponse.data);
-  } catch (error) {
-    console.error("Error al cambiar estado del rol:", error);
-    alert("Error al cambiar el estado del rol");
-  }
-};
-
-  const handleDelete = async (rol) => {
-    if (!window.confirm(`¿Está seguro de eliminar el rol "${rol.nombreRol}"?`)) {
-      return;
-    }
+    if (!result.isConfirmed) return;
 
     try {
       const idUsuario = admin.idUsuario;
-      await rolService.eliminarRol(rol.idRol, idUsuario);
-      
+
+      // Mostrar loading
+      Swal.fire({
+        title: "Procesando...",
+        text: "Por favor espere",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      if (esActivo) {
+        // Desactivar (cambia a estado Inactivo - id 7)
+        await rolService.eliminarRol(rol.idRol, idUsuario);
+      } else {
+        // Activar (cambia a estado ACTIVA - id 2)
+        await rolService.activarRol(rol.idRol, idUsuario);
+      }
+
       // Recargar roles
       const rolesResponse = await rolService.getRoles();
       setRoles(rolesResponse.data);
       setRolesOriginales(rolesResponse.data);
+
+      // Éxito
+      Swal.fire({
+        icon: "success",
+        title: `¡Rol ${esActivo ? "desactivado" : "activado"}!`,
+        text: `El rol "${rol.nombreRol}" ha sido ${esActivo ? "desactivado" : "activado"} exitosamente`,
+        confirmButtonColor: "#00b4c6",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
     } catch (error) {
-      console.error("Error al eliminar rol:", error);
-      alert("Error al eliminar el rol");
+      console.error("Error al cambiar estado del rol:", error);
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Error al cambiar el estado del rol",
+        confirmButtonColor: "#00b4c6",
+      });
     }
   };
 
@@ -289,46 +362,44 @@ export default function RolTable() {
                       </td>
                     </tr>
                   ) : (
-                    rolesActuales.map((rol) => (
-                      <tr key={rol.idRol}>
-                        <td>{rol.idRol}</td>
-                        <td><strong>{rol.nombreRol}</strong></td>
-                        <td>{rol.descripcion}</td>
-                        <td>
-                          <span
-                            className={`estado-badge ${
-                              rol.estado?.nombreEstado === "Activo"
-                                ? "activo"
-                                : "inactivo"
-                            }`}
-                          >
-                            {rol.estado?.nombreEstado || "N/A"}
-                          </span>
-                        </td>
-                        <td>
-                        <div className="action-buttons">
-                            <button
-                            className="btn-action btn-edit"
-                            onClick={() => handleEdit(rol)}
-                            title="Editar"
+                    rolesActuales.map((rol) => {
+                      const esActivo = rol.estado?.nombreEstado === "ACTIVA";
+                      
+                      return (
+                        <tr key={rol.idRol}>
+                          <td>{rol.idRol}</td>
+                          <td><strong>{rol.nombreRol}</strong></td>
+                          <td>{rol.descripcion}</td>
+                          <td>
+                            <span
+                              className={`estado-badge ${
+                                esActivo ? "activo" : "inactivo"
+                              }`}
                             >
-                            ✏️
-                            </button>
-                            <button
-                            className="btn-action btn-toggle"
-                            onClick={() => handleToggleEstado(rol)}
-                            title={
-                                rol.estado?.nombreEstado === "Activo"
-                                ? "Desactivar"
-                                : "Activar"
-                            }
-                            >
-                            {rol.estado?.nombreEstado === "Activo" ? "🔓" : "🔒"}
-                            </button>
-                        </div>
-                        </td>
-                      </tr>
-                    ))
+                              {rol.estado?.nombreEstado || "N/A"}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="btn-action btn-edit"
+                                onClick={() => handleEdit(rol)}
+                                title="Editar"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="btn-action btn-toggle"
+                                onClick={() => handleToggleEstado(rol)}
+                                title={esActivo ? "Desactivar" : "Activar"}
+                              >
+                                {esActivo ? "🔓" : "🔒"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

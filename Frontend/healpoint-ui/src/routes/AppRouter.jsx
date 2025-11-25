@@ -3,10 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // Auth
 import Login from "../components/Login/Login";
 
-// Paciente Views (placeholder - crear según necesites)
-// import CitaList from "../components/Paciente/CitaList/CitaList";
-// import CitaForm from "../components/Paciente/CitaForm/CitaForm";
-// import HistorialPaciente from "../components/Paciente/HistorialPaciente/HistorialPaciente";
 
 import Register from "../components/Register/Register";
 
@@ -17,7 +13,7 @@ import Contacto from "../components/Shared/Footer/contacto/contacto";
 import Footer from "../components/Shared/Footer/Footer";
 
 // Dashboards
-import DashboardAdmin from "../components/Administrador/Administrador";
+import DashboardAdmin from "../components/DashboardAdministrador/DashboardAdministrador";
 import DashboardMedico from "../components/DashboardMedico/DashboardMedico";
 import DashboardPaciente from "../components/DashboardPaciente/DashboardPaciente";
 
@@ -25,7 +21,7 @@ import DashboardPaciente from "../components/DashboardPaciente/DashboardPaciente
 import UsuarioList from "../components/Administrador/UsuarioList/UsuarioList";
 import RolTable from "../components/Administrador/RolTable/RolTable";
 import EstadoTable from "../components/Administrador/EstadoTable/EstadoTable";
-//import AgendaGlobal from "../components/Administrador/AgendaGlobal/AgendaGlobal";
+import AgendaGlobal from "../components/Administrador/AgendaGlobal/AgendaGlobal";
 import MonitoriaTable from "../components/Administrador/MonitoriaTable/MonitoriaTable";
 
 // Medico Views
@@ -36,6 +32,7 @@ import HistorialMedicoForm from "../components/Medico/HistorialMedicoFrom/Histor
 // Paciente Views
 import CitaList from "../components/Paciente/CitaList/CitaList";
 import HistorialPaciente from "../components/Paciente/HistorialPaciente/HistorialPaciente";
+import CitaForm from "../components/Paciente/CitaForm/CitaForm";
 
 function AppRouter() {
   return (
@@ -61,8 +58,8 @@ function AppRouter() {
         <Route path="/admin/usuarios" element={<UsuarioList />} />
         <Route path="/admin/roles" element={<RolTable />} />   
         <Route path="/admin/estados" element={<EstadoTable />} />
-{/*         <Route path="/admin/agenda" element={<AgendaGlobal />} />
- */}        <Route path="/admin/monitoreo" element={<MonitoriaTable />} />
+        <Route path="/admin/agenda" element={<AgendaGlobal />} />
+        <Route path="/admin/monitoreo" element={<MonitoriaTable />} />
 
         {/* ============================================
             RUTAS MÉDICO
@@ -75,6 +72,7 @@ function AppRouter() {
             RUTAS PACIENTE (descomentar cuando crees los componentes)
             ============================================ */}
         <Route path="/paciente/citas" element={<CitaList />} />
+        <Route path="/paciente/agendar" element={<CitaForm />} />
         <Route path="/paciente/historial" element={<HistorialPaciente />} />
 
         {/* ============================================
