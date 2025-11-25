@@ -10,6 +10,9 @@ import com.healpoint.repository.PacienteRepository;
 import com.healpoint.repository.EstadoRepository;
 
 import com.healpoint.service.MonitoriaService;
+import com.healpoint.service.DisponibilidadService;
+import com.healpoint.validator.FechaValidator;
+import com.healpoint.validator.HoraValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +41,9 @@ public class CitaController {
 
     @Autowired
     private MonitoriaService monitoriaService;
+
+    @Autowired
+    private DisponibilidadService disponibilidadService;
 
     /**
      * GET /cita/mostrarCitas → Listar todas las citas.
@@ -127,6 +133,30 @@ public class CitaController {
         if (citaExistente.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("El médico ya tiene una cita agendada en la fecha " + citaData.getFecha() + " y hora " + citaData.getHora() + ".");
+        }
+
+        // Validación de fecha futura
+        if (!FechaValidator.esFechaValida(citaData.getFecha())) {
+            return ResponseEntity.badRequest().body("La fecha no puede ser anterior a hoy.");
+        }
+
+        // Validación de hora en rango
+        if (!HoraValidator.esHoraEnRango(citaData.getHora())) {
+            return ResponseEntity.badRequest().body("La hora debe estar entre 6:00 y 20:00.");
+        }
+
+        // Validación de hora pasada si la fecha es hoy
+        if (HoraValidator.esHoraDelPasado(citaData.getFecha(), citaData.getHora())) {
+            return ResponseEntity.badRequest().body("La hora indicada ya pasó.");
+        }
+
+        if (!disponibilidadService.medicoDisponible(
+                citaData.getMedico().getId_medico(),
+                citaData.getFecha(),
+                citaData.getHora()
+        )) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("El médico no está disponible en ese horario.");
         }
 
         // 4. Crear y guardar la cita

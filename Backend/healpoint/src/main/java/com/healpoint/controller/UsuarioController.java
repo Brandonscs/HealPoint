@@ -8,6 +8,7 @@ import com.healpoint.repository.RolRepository;
 import com.healpoint.repository.UsuarioRepository;
 import com.healpoint.service.MonitoriaService;
 
+import com.healpoint.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,10 +72,9 @@ public class UsuarioController {
         if (datos.getApellido() == null || datos.getApellido().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("El apellido es obligatorio.");
         }
-        if (datos.getCorreo() == null || datos.getCorreo().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("El correo es obligatorio.");
+        if (!EmailValidator.esCorreoValido(datos.getCorreo())) {
+            return ResponseEntity.badRequest().body("El correo no tiene un formato válido.");
         }
-
         if (usuarioRepository.findByCorreo(datos.getCorreo()).isPresent()) {
             return ResponseEntity.badRequest().body("Ya existe un usuario con ese correo.");
         }
@@ -135,8 +135,8 @@ public class UsuarioController {
         if (datos.getApellido() == null || datos.getApellido().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("El apellido no puede estar vacío.");
         }
-        if (datos.getCorreo() == null || datos.getCorreo().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("El correo no puede estar vacío.");
+        if (!EmailValidator.esCorreoValido(datos.getCorreo())) {
+            return ResponseEntity.badRequest().body("El correo no tiene un formato válido.");
         }
 
         usuarioRepository.findByCorreo(datos.getCorreo()).ifPresent(existing -> {
