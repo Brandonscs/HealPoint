@@ -34,6 +34,11 @@ public class Paciente {
         return idPaciente;
     }
 
+    public Integer setIdPaciente(Integer idPaciente) {
+        this.idPaciente = idPaciente;
+        return idPaciente;
+    }
+
     public String getEps() {
         return eps;
     }
