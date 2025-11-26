@@ -1,33 +1,57 @@
 
----
 
 ````md
-# 🏥 HealPoint — Sistema de Gestión Médica  
-Proyecto Final • Ingeniería en Informática • Universidad de Caldas (2025)
+# 🏥 HealPoint — Sistema de Gestión Médica
 
-HealPoint es un sistema médico web que permite la gestión integral de citas, usuarios, historiales clínicos, disponibilidad médica y auditoría, desarrollado como proyecto final de la asignatura **Calidad y Pruebas de Software**.
+Proyecto desarrollado por **José Stiven Rodas Beltrán** y **Brandon Steven Carvajal Sepúlveda** como entrega final de la asignatura *Calidad y Pruebas de Software* — Universidad de Caldas, 2025.
 
 ---
 
-## 🚀 Clonar el Repositorio
-
-Ejecuta los siguientes comandos:
+## 📂 Clonar el Repositorio
 
 ```bash
 git clone https://github.com/Brandonscs/HealPoint.git
-cd HealPoint
 ````
 
-Instalar dependencias:
+---
+
+## 🚀 Cómo Ejecutar el Proyecto
+
+### 🖥️ Backend — Spring Boot (IntelliJ IDEA 2025.2.4)
+
+1. Abrir **IntelliJ IDEA 2025.2.4**.
+2. Seleccionar **Open** y elegir la carpeta `/backend`.
+3. Esperar a que **Maven descargue las dependencias**.
+4. Configurar el archivo `.env` o `application.properties` con tu base de datos.
+5. Ejecutar la clase principal:
+
+```
+src/main/java/com.healpoint/HealPointApplication.java
+```
+
+6. Backend correrá en:
+
+```
+http://localhost:8080
+```
+
+---
+
+### 💻 Frontend — React (Visual Studio Code)
+
+1. Abrir **Visual Studio Code**.
+2. Seleccionar **Open Folder** → carpeta `/frontend`.
+3. Abrir terminal y ejecutar:
 
 ```bash
 npm install
+npm run dev
 ```
 
-Ejecutar el proyecto:
+4. El frontend arrancará en:
 
-```bash
-npm run dev
+```
+http://localhost:5173
 ```
 
 ---
@@ -37,14 +61,17 @@ npm run dev
 ### 🔹 Hardware
 
 * RAM: **mínimo 4 GB (recomendado 8 GB)**
-* Procesador: **Intel i3 o superior**
-* Conexión estable a Internet
+* Procesador **Intel i3 o superior**
+* Conexión estable a internet
 * Resolución mínima **1366x768**
 
 ### 🔹 Software
 
-* Windows 10/11, Linux o macOS
-* Node.js (última versión recomendada)
+* **Windows 10/11, Linux o macOS**
+* **Node.js** (última versión recomendada)
+* **Java 17+**
+* **IntelliJ IDEA 2025.2.4** (para backend)
+* **Visual Studio Code** (para frontend)
 * Navegador actualizado (Chrome, Firefox, Edge)
 * Base de datos configurada según archivo `.env`
 
@@ -64,12 +91,12 @@ npm run dev
 
 * Gestionar disponibilidad
 * Ver citas asignadas
-* Actualizar estado de citas
+* Cambiar estado de citas
 * Registrar historiales médicos
 
 ### 👤 Paciente
 
-* Agendar una cita
+* Agendar citas
 * Ver sus citas
 * Consultar historial médico
 
@@ -85,7 +112,7 @@ A continuación encontrarás el paso a paso para cada rol.
 
 1. Ingrese sus credenciales.
 2. Presione **Iniciar sesión**.
-3. El sistema redirecciona automáticamente al dashboard correspondiente a su rol.
+3. El sistema lo redirecciona automáticamente al dashboard de su rol.
 
 ---
 
@@ -96,7 +123,7 @@ A continuación encontrarás el paso a paso para cada rol.
 Incluye:
 
 * Tarjetas de acceso rápido
-* Navbar superior con nombre, rol y cerrar sesión
+* Navbar superior con nombre, rol y botón cerrar sesión
 * Sidebar con módulos principales
 
 ---
@@ -142,12 +169,12 @@ Incluye:
 Permite:
 
 * Crear estados
-* Editar
-* Eliminar
+* Editar estados
+* Eliminar estados
 
 Incluye:
 
-* Tabla con ID, nombre y descripción
+* Tabla con ID, nombre, descripción
 * Botón **Nuevo Estado**
 
 ---
@@ -156,10 +183,14 @@ Incluye:
 
 El administrador puede:
 
-* Ver todas las citas
+* Ver **todas** las citas
 * Filtrar por médico, paciente, fecha o estado
-* Cambiar entre vista **Tabla** o **Calendario**
-* Ver estadísticas: total, pendientes, completadas
+* Cambiar vista **Tabla / Calendario**
+* Ver estadísticas:
+
+  * Total de citas
+  * Pendientes
+  * Completadas
 
 ---
 
@@ -218,7 +249,12 @@ Permite:
 
 Incluye:
 
-* Métricas (total, hoy, pendientes, completadas)
+* Métricas:
+
+  * Total
+  * Hoy
+  * Pendientes
+  * Completadas
 * Tarjetas con fecha, hora, paciente, estado y acciones
 
 ---
@@ -235,7 +271,7 @@ Incluye:
 
 * Botón **+ Nuevo Historial**
 * Búsqueda avanzada
-* Tabla con: paciente, fecha, diagnóstico, tratamiento, acciones
+* Tabla con paciente, fecha, diagnóstico, tratamiento, acciones
 
 ---
 
@@ -243,7 +279,7 @@ Incluye:
 
 ## ▶️ Dashboard Paciente
 
-Accesos rápidos:
+Accesos rápidos a:
 
 * Agendar cita
 * Mis citas
@@ -260,7 +296,7 @@ El paciente puede:
 * Elegir médico
 * Escoger fecha y hora disponibles
 * Describir motivo de consulta
-* Confirmar la solicitud
+* Confirmar solicitud
 
 ---
 
@@ -275,7 +311,13 @@ Permite:
 
 Incluye:
 
-* Tarjetas con fecha, hora, médico, especialidad y estado
+* Tarjetas con:
+
+  * Fecha
+  * Hora
+  * Médico
+  * Especialidad
+  * Estado
 * Botón **Cancelar Cita**
 
 ---
@@ -289,10 +331,7 @@ Permite:
 * Buscar registros
 
 Si no tiene registros:
-
-```
-No hay historiales médicos registrados
-```
+**“No hay historiales médicos registrados”**
 
 ---
 
@@ -302,9 +341,9 @@ No hay historiales médicos registrados
 * Revisar citas periódicamente
 * Cancelar con anticipación
 * No compartir credenciales
-* Revisión frecuente del historial médico
+* Revisar historial médico
 * Reportar errores al equipo de desarrollo
-* Estar atento a notificaciones del sistema
+* Revisar notificaciones del sistema
 
 ---
 
@@ -312,23 +351,24 @@ No hay historiales médicos registrados
 
 | Nombre                                | Correo                                                                | Teléfono     |
 | ------------------------------------- | --------------------------------------------------------------------- | ------------ |
-| **José Stiven Rodas Beltrán**         | [jestiben1128@gmail.com](mailto:jestiben1128@gmail.com)               | 324 983 1975 |
-| **Brandon Steven Carvajal Sepúlveda** | [brandoncarvajal2002@gmail.com](mailto:brandoncarvajal2002@gmail.com) | 313 212 3150 |
+| **José Stiven Rodas Beltrán**         | [jestiben1128@gmail.com](mailto:jestiben1128@gmail.com)               |+57 324 983 1975 |
+| **Brandon Steven Carvajal Sepúlveda** | [brandoncarvajal2002@gmail.com](mailto:brandoncarvajal2002@gmail.com) |+57 313 212 3150 |
 
 ---
 
 # 🏫 Universidad de Caldas
 
 **Ingeniería en Informática – 6° Semestre**
-Proyecto Final — 2025
+**Proyecto Final — 2025**
 
 ---
 
 # 📄 Licencia
 
-Este proyecto y su documentación no pueden ser reproducidos sin autorización expresa de los autores y la Universidad de Caldas.
+Este proyecto y su documentación **NO pueden ser reproducidos** sin autorización expresa de los autores y la Universidad de Caldas.
 
----
+```
+
 
 
 
